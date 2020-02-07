@@ -76,7 +76,7 @@ class Halofit(object):
    def fPhalofit(self, k, z, A):
       """A has to be a ParamsHalofit object
       """
-      #print '********** k, z = ', k, z
+      ##print '********** k, z = ', k, z
       Delta2Linz = k**3 * self.U.fPlin_z(k, z)/(2 * np.pi**2)
       
       y = k / A.k_sigma
@@ -97,7 +97,7 @@ class Halofit(object):
          for iK in range(self.Nk):
             k = self.kvec[iK]
             Pmat[iK, iZ] = self.fPhalofit(k, z, A)
-         print 'done with redshift',z
+         #print 'done with redshift',z
       np.savetxt(self.path, Pmat)
 
 

@@ -39,7 +39,7 @@ class P2dAuto(object):
       
       
    def SaveP(self):
-      print "precomputing p2d "+self.name
+      #print "precomputing p2d "+self.name
       data = np.zeros((len(self.L), 4))
       data[:,0] = self.L.copy()
       data[:,1] = np.array(map(self.fP_1h, self.L))
@@ -67,7 +67,7 @@ class P2dAuto(object):
       self.fPtotinterp = lambda l: forPtot(l)*(l>=min(self.L))*(l<=max(self.L))
    
    def SaveT(self):
-      print "precomputing t2d "+self.name
+      #print "precomputing t2d "+self.name
       data = np.zeros((len(self.L), 6))
       data[:,0] = self.L.copy()
       data[:,1] = np.array(map(self.fT_1h, self.L))
@@ -120,13 +120,13 @@ class P2dAuto(object):
    def fP_1h(self, l):
       f = lambda a: self.integrandP(a, self.Pn.fP1hinterp, l)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
-      print "done ell=",l
+      #print "done ell=",l
       return result
 
    def fP_2h(self, l):
       f = lambda a: self.integrandP(a, self.Pn.fP2hinterp, l)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
-      print "done ell=",l
+      #print "done ell=",l
       return result
 
    def fP(self, l):
@@ -176,19 +176,19 @@ class P2dAuto(object):
    def fT_1h(self, l):
       f = lambda a: self.integrandT(a, self.Pn.fT1hinterp, l)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
-      print "done ell=",l
+      #print "done ell=",l
       return result
 
    def fT_2h(self, l):
       f = lambda a: self.integrandT(a, self.Pn.fT2hinterp, l)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
-      print "done ell=",l
+      #print "done ell=",l
       return result
 
    def fT_4h(self, l):
       f = lambda a: self.integrandT(a, self.Pn.fT4hinterp, l)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
-      print "done ell=",l
+      #print "done ell=",l
       return result
 
    def fT(self, l):
@@ -205,7 +205,7 @@ class P2dAuto(object):
       g = lambda k,z: self.Pn.fT_ssv(k, k, k*L/l, z)
       f = lambda a: self.integrandT(a, g, l)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
-      print "done ell=",l
+      #print "done ell=",l
       return result
 
 
@@ -226,7 +226,7 @@ class P2dAuto(object):
    def fTnondiag(self, l1, l2):
       f = lambda a: self.integrandTNonDiag(a, self.Pn.fTnondiag, l1, l2)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
-      print "done ell=",l1, l2
+      #print "done ell=",l1, l2
       return result
 
 
@@ -304,7 +304,7 @@ class P2dAuto(object):
    def plotdPdz(self, l=1.e3):
       A = np.linspace(self.aMin, self.aMax, 201)
       Z = 1./A-1.
-      print Z
+      #print Z
       Chi = np.array(map(lambda a: self.U.ComovDist(a, 1.), A))
       H = np.array(map(lambda a: self.U.Hubble(a), A))
       W = np.array(map(self.Weight.f, A))
@@ -453,7 +453,7 @@ class P2dAuto(object):
          dP1hdz[:,iL] = np.array(map(f, A))
          dP1hdz[:,iL] *= A**2
          #dP1hdz[:,iL] /= np.trapz(Z, dP1hdz[:,iL])
-      print "done 1h"
+      #print "done 1h"
       
       # 2h
       dP2hdz = np.zeros((nZ, nL))
@@ -463,7 +463,7 @@ class P2dAuto(object):
          dP2hdz[:,iL] = np.array(map(f, A))
          dP2hdz[:,iL] *= A**2
          #dP2hdz[:,iL] /= np.trapz(Z, dP2hdz[:,iL])
-      print "done 2h"
+      #print "done 2h"
 
       # shot noise
       if hasattr(self.Weight, 'fdPshotNoise_da'):
@@ -474,7 +474,7 @@ class P2dAuto(object):
             dPshotdz[:,iL] = np.array(map(f, A))
             dPshotdz[:,iL] *= A**2
             #dPshotdz[:,iL] /= np.trapz(Z, dPshotdz[:,iL])
-         print "done shot noise"
+         #print "done shot noise"
       '''
    
       # total
@@ -487,7 +487,7 @@ class P2dAuto(object):
 #         # normalize so int dz dP/dz = 1 for all ell
 #         dPdz[:,iL] /= np.trapz(Z, dPdz[:,iL])
       dPdz = np.abs(dPdz)
-      print "done total"
+      #print "done total"
       
       # show the 2d color plot
       zz,ll = np.meshgrid(zEdges, lEdges, indexing='ij')
@@ -626,7 +626,7 @@ class P2dAuto(object):
          return self.Pn.fT1hinterp(l/chi, z)
       T3d_1h = np.array(map(f, A))
       
-      #      print T3d_1h
+      #      #print T3d_1h
       
       # integrand
       f = lambda a: self.integrand(a, self.Pn.fT1hinterp, l)
@@ -634,7 +634,7 @@ class P2dAuto(object):
       
       dT1h_dz = dT1h_da * A**2
       
-      #      print dT1h_dz
+      #      #print dT1h_dz
       
       fig=plt.figure(0)
       ax=fig.add_subplot(111)

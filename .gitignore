@@ -6,5 +6,5 @@
 *.pyc
 
 # all output files
-#output/
+output/
 figures/

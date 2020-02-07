@@ -470,7 +470,7 @@ class Universe(object):
 #      integ = vegas.Integrator([[1.e-4, 1.e1], [1.e-4, 1.e1], [-1., 1.]])
 #      integ(integrand, nitn=4, neval=1000)
 #      result = integ(integrand, nitn=8, neval=1000)
-#      print result.sdev/result.mean
+#      #print result.sdev/result.mean
 #      return result.mean
 ##      return result.summary()
 
@@ -501,8 +501,8 @@ class Universe(object):
       integ = vegas.Integrator([[1.e-4, 1.e1], [1.e-4, 1.e1], [-1., 1.]])
       integ(integrand, nitn=8, neval=1000)
       result = integ(integrand, nitn=8, neval=1000)
-      print result.sdev/result.mean
-#      print result.summary()
+      #print result.sdev/result.mean
+#      #print result.summary()
       return result.mean
    
 
@@ -807,7 +807,7 @@ class Universe(object):
    ##################################################################################
 
    def plotSizeACTDeep(self):
-      # typical size of the ACT Deep footprint
+      # typical size of the ACT Deep foot#print
       theta = 10.*(np.pi/180.)
       Z = np.linspace(0., 1., 21)
       

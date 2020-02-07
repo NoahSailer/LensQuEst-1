@@ -409,8 +409,8 @@ class CMB(object):
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to CMB:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to CMB:", result, "muK"
+      ##print "relative error on integral is", error/result
 
       # detector noise would diverge, because it is a constant divided by the beam**2
 
@@ -419,24 +419,24 @@ class CMB(object):
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to CIB:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to CIB:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       # tSZ
       f = lambda l: self.ftSZ(l) / self.fdl_to_cl(l) / l
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to tSZ:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to tSZ:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       # kSZ
       f = lambda l: self.fkSZ(l) / self.fdl_to_cl(l) / l
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to kSZ:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to kSZ:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       return
 
@@ -452,40 +452,40 @@ class CMB(object):
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to CMB:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to CMB:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       # detector noise
       f = lambda l: self.fdetectorNoise(l) * (l+1.)/(2.*np.pi)
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to detector noise:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to detector noise:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       # CIB Poisson and clustered
       f = lambda l: ( self.fCIBPoisson(l) + self.fCIBClustered(l) ) * (l+1.)/(2.*np.pi)
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to CIB:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to CIB:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       # tSZ
       f = lambda l: self.ftSZ(l) * (l+1.)/(2.*np.pi)
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to tSZ:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to tSZ:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       # kSZ
       f = lambda l: self.fkSZ(l) * (l+1.)/(2.*np.pi)
       result, error = integrate.quad(f, 1., 1.e4, epsabs=0., epsrel=1.e-5)
       result = np.sqrt(result)
       error = np.sqrt(error)
-      print "- temperature fluctuations due to kSZ:", result, "muK"
-      #print "relative error on integral is", error/result
+      #print "- temperature fluctuations due to kSZ:", result, "muK"
+      ##print "relative error on integral is", error/result
       
       
    # outputs the uncertainty on amplitude of profile
