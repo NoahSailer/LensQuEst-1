@@ -35,7 +35,7 @@ class CMB(object):
       
       # convert from Dl to pixel noise Cl
       #self.fdl_to_cl = lambda l: self.fbeam(l)**2 / ( l*(l+1.)/(2.*np.pi) )
-      self.fdl_to_cl = lambda l: 1./( old_div(l*(l+1.),(2.*np.pi)) )
+      self.fdl_to_cl = lambda l: divide(1., l*(l+1.) / (2.*np.pi))
       
       ###########################################
       # unlensed primary T, E, B

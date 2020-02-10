@@ -79,14 +79,34 @@ def floatExpForm(input):
       return mantissa + 'e' + exponent
 
 
+#def divide(x, y, exceptOut=0.):
+#   '''Returns 0. or any requested value
+#   when dividing by zero.
+#   '''
+#   try:
+#      #np.seterr(divide='ignore')
+#      result = np.divide(x, y)
+#      result[np.where(np.isfinite(result)==False)] = 0.
+#      return result
+#   except ZeroDivisionError: return exceptOut
+#
+
 def divide(x, y, exceptOut=0.):
    '''Returns 0. or any requested value
    when dividing by zero.
    '''
-   try:
-      #np.seterr(divide='ignore')
-      result = np.divide(x, y)
-      result[np.where(np.isfinite(result)==False)] = 0.
-      return result
+   try: return x/y
    except ZeroDivisionError: return exceptOut
+
+
+def divideArr(x, y, exceptOut=0.):
+   '''Returns 0. or any requested value
+   when dividing by zero.
+   '''
+   loc = np.where(y<>0.)[0]
+   result = exceptOut * np.ones_like(x)
+   result[loc] = x[loc] / y[loc]
+   return result
+
+
 

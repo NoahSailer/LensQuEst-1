@@ -1180,7 +1180,7 @@ class FlatMap(object):
       return laplacianFourier
 
    def phiFromKappa(self, kappaFourier):
-      phiFourier = divide(-2. * kappaFourier, self.l**2)
+      phiFourier = divideArr(-2. * kappaFourier, self.l**2)
       phiFourier[np.where(np.isfinite(phiFourier)==False)] = 0.
       return phiFourier
 
@@ -1197,8 +1197,8 @@ class FlatMap(object):
       Delta phi = 2 kappa
       d = grad phi
       """
-      dxFourier = divide(-2.j * self.lx, self.l**2) * kappaFourier
-      dyFourier = divide(-2.j * self.ly, self.l**2) * kappaFourier
+      dxFourier = divideArr(-2.j * self.lx, self.l**2) * kappaFourier
+      dyFourier = divideArr(-2.j * self.ly, self.l**2) * kappaFourier
       #
       dxFourier[np.where(np.isfinite(dxFourier)==False)] = 0.
       dyFourier[np.where(np.isfinite(dyFourier)==False)] = 0.
@@ -2529,11 +2529,11 @@ class FlatMap(object):
          # First, the asymmetric term
          # term1x
          term1XFourier = self.fourier(gradX * dilation)
-         term1XFourier *= divide(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+         term1XFourier *= divideArr(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
          term1XFourier[np.where(np.isfinite(term1XFourier)==False)] = 0.
          # term1y
          term1YFourier = self.fourier(gradY * dilation)
-         term1YFourier *= divide(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+         term1YFourier *= divideArr(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
          term1YFourier[np.where(np.isfinite(term1YFourier)==False)] = 0.
          # sum
          term1Fourier = term1XFourier + term1YFourier
@@ -2550,12 +2550,12 @@ class FlatMap(object):
          # term2x
          term2X = self.inverseFourier(gradXFourier * dilationFourier)
          term2XFourier = self.fourier(term2X * ellLimits)
-         term2XFourier *= divide(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+         term2XFourier *= divideArr(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
          term2XFourier[np.where(np.isfinite(term2XFourier)==False)] = 0.
          # term2y
          term2Y = self.inverseFourier(gradYFourier * dilationFourier)
          term2YFourier = self.fourier(term2Y * ellLimits)
-         term2YFourier *= divide(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+         term2YFourier *= divideArr(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
          term2YFourier[np.where(np.isfinite(term2XFourier)==False)] = 0.
          # sum
          term2Fourier = term2XFourier + term2YFourier
@@ -2776,11 +2776,11 @@ class FlatMap(object):
       # First, the asymmetric term
       # term1x
       term1XFourier = self.fourier(gradX * dilation)
-      term1XFourier *= divide(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+      term1XFourier *= divideArr(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
       term1XFourier[np.where(np.isfinite(term1XFourier)==False)] = 0.
       # term1y
       term1YFourier = self.fourier(gradY * dilation)
-      term1YFourier *= divide(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+      term1YFourier *= divideArr(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
       term1YFourier[np.where(np.isfinite(term1YFourier)==False)] = 0.
       # sum
       term1Fourier = term1XFourier + term1YFourier
@@ -2797,12 +2797,12 @@ class FlatMap(object):
       # term2x
       term2X = self.inverseFourier(gradXFourier * dilationFourier)
       term2XFourier = self.fourier(term2X * ellLimits)
-      term2XFourier *= divide(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+      term2XFourier *= divideArr(2. * self.lx, self.l**2) / 1.j # factor of i to cancel the one in the gradient
       term2XFourier[np.where(np.isfinite(term2XFourier)==False)] = 0.
       # term2y
       term2Y = self.inverseFourier(gradYFourier * dilationFourier)
       term2YFourier = self.fourier(term2Y * ellLimits)
-      term2YFourier *= divide(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
+      term2YFourier *= divideArr(2. * self.ly, self.l**2) / 1.j # factor of i to cancel the one in the gradient
       term2YFourier[np.where(np.isfinite(term2XFourier)==False)] = 0.
       # sum
       term2Fourier = term2XFourier + term2YFourier
@@ -2952,7 +2952,7 @@ class FlatMap(object):
          self.plotFourier(term1Fourier + term2Fourier)
       
       # get phi from kappa
-      resultFourier *= divide(-2., self.l**2)
+      resultFourier *= divideArr(-2. * np.ones_like(self.l), self.l**2)
       resultFourier[np.where(np.isfinite(resultFourier)==False)] = 0.
       if test:
          print("checking the power spectrum of phi map")
@@ -3052,11 +3052,11 @@ class FlatMap(object):
          # generate shear maps
          shearFourier = self.filterFourierIsotropic(f, dataFourier=np.ones_like(self.l), test=test)
          #
-         cosXFourier = divide(shearFourier * (self.lx**2 - self.ly**2), self.l**2)
+         cosXFourier = divideArr(shearFourier * (self.lx**2 - self.ly**2), self.l**2)
          cosXFourier[np.where(np.isfinite(cosXFourier)==False)] = 0.
          cosX = self.inverseFourier(cosXFourier)
          #
-         cosYFourier = divide(shearFourier * self.lx * self.ly, self.l**2)
+         cosYFourier = divideArr(shearFourier * self.lx * self.ly, self.l**2)
          cosYFourier[np.where(np.isfinite(cosYFourier)==False)] = 0.
          cosY = self.inverseFourier(cosYFourier)
 
@@ -3077,22 +3077,22 @@ class FlatMap(object):
          # Term 1
          grad1XcosXFourier = self.fourier(gradX * cosX)
          grad1XcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-         grad1XcosXFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+         grad1XcosXFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
          grad1XcosXFourier[np.where(np.isfinite(grad1XcosXFourier)==False)] = 0.
          #
          grad1YcosXFourier = self.fourier(gradY * cosX)
          grad1YcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-         grad1YcosXFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+         grad1YcosXFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
          grad1YcosXFourier[np.where(np.isfinite(grad1YcosXFourier)==False)] = 0.
          #
          grad1XcosYFourier = self.fourier(gradX * cosY)
          grad1XcosYFourier *= 4. * self.lx * self.ly   # for cos
-         grad1XcosYFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+         grad1XcosYFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
          grad1XcosYFourier[np.where(np.isfinite(grad1XcosYFourier)==False)] = 0.
          #
          grad1YcosYFourier = self.fourier(gradY * cosY)
          grad1YcosYFourier *= 4. * self.lx * self.ly   # for cos
-         grad1YcosYFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+         grad1YcosYFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
          grad1YcosYFourier[np.where(np.isfinite(grad1YcosYFourier)==False)] = 0.
          #
          # sum
@@ -3110,25 +3110,25 @@ class FlatMap(object):
          grad2XcosX = self.inverseFourier(gradXFourier * cosXFourier)
          grad2XcosXFourier = self.fourier(grad2XcosX * ellLimits)
          grad2XcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-         grad2XcosXFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+         grad2XcosXFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
          grad2XcosXFourier[np.where(np.isfinite(grad2XcosXFourier)==False)] = 0.
          #
          grad2YcosX = self.inverseFourier(gradYFourier * cosXFourier)
          grad2YcosXFourier = self.fourier(grad2YcosX * ellLimits)
          grad2YcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-         grad2YcosXFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+         grad2YcosXFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
          grad2YcosXFourier[np.where(np.isfinite(grad2YcosXFourier)==False)] = 0.
          #
          grad2XcosY = self.inverseFourier(gradXFourier * cosYFourier)
          grad2XcosYFourier = self.fourier(grad2XcosY * ellLimits)
          grad2XcosYFourier *= 4. * self.lx * self.ly   # for cos
-         grad2XcosYFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+         grad2XcosYFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
          grad2XcosYFourier[np.where(np.isfinite(grad2XcosYFourier)==False)] = 0.
          #
          grad2YcosY = self.inverseFourier(gradYFourier * cosYFourier)
          grad2YcosYFourier = self.fourier(grad2YcosY * ellLimits)
          grad2YcosYFourier *= 4. * self.lx * self.ly   # for cos
-         grad2YcosYFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+         grad2YcosYFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
          grad2YcosYFourier[np.where(np.isfinite(grad2YcosXFourier)==False)] = 0.
          #
          # sum
@@ -3227,10 +3227,10 @@ class FlatMap(object):
          return result
       
       # useful terms
-      fx = divide(self.lx**2-self.ly**2, self.l**2)
+      fx = divideArr(self.lx**2-self.ly**2, self.l**2)
       fx[np.where(np.isfinite(fx)==False)] = 0.
       #
-      fy = divide(self.lx*self.ly, self.l**2)
+      fy = divideArr(self.lx*self.ly, self.l**2)
       fy[np.where(np.isfinite(fy)==False)] = 0.
    
       # First, the symmetric term
@@ -3373,11 +3373,11 @@ class FlatMap(object):
       # generate shear maps
       shearFourier = self.filterFourierIsotropic(f, dataFourier=np.ones_like(self.l), test=test)
       #
-      cosXFourier = divide(shearFourier * (self.lx**2 - self.ly**2), self.l**2)
+      cosXFourier = divideArr(shearFourier * (self.lx**2 - self.ly**2), self.l**2)
       cosXFourier[np.where(np.isfinite(cosXFourier)==False)] = 0.
       cosX = self.inverseFourier(cosXFourier)
       #
-      cosYFourier = divide(shearFourier * self.lx * self.ly, self.l**2)
+      cosYFourier = divideArr(shearFourier * self.lx * self.ly, self.l**2)
       cosYFourier[np.where(np.isfinite(cosYFourier)==False)] = 0.
       cosY = self.inverseFourier(cosYFourier)
 
@@ -3398,22 +3398,22 @@ class FlatMap(object):
       # Term 1
       grad1XcosXFourier = self.fourier(gradX * cosX)
       grad1XcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-      grad1XcosXFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+      grad1XcosXFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
       grad1XcosXFourier[np.where(np.isfinite(grad1XcosXFourier)==False)] = 0.
       #
       grad1YcosXFourier = self.fourier(gradY * cosX)
       grad1YcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-      grad1YcosXFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+      grad1YcosXFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
       grad1YcosXFourier[np.where(np.isfinite(grad1YcosXFourier)==False)] = 0.
       #
       grad1XcosYFourier = self.fourier(gradX * cosY)
       grad1XcosYFourier *= 4. * self.lx * self.ly   # for cos
-      grad1XcosYFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+      grad1XcosYFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
       grad1XcosYFourier[np.where(np.isfinite(grad1XcosYFourier)==False)] = 0.
       #
       grad1YcosYFourier = self.fourier(gradY * cosY)
       grad1YcosYFourier *= 4. * self.lx * self.ly   # for cos
-      grad1YcosYFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+      grad1YcosYFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
       grad1YcosYFourier[np.where(np.isfinite(grad1YcosYFourier)==False)] = 0.
       #
       # sum
@@ -3431,25 +3431,25 @@ class FlatMap(object):
       grad2XcosX = self.inverseFourier(gradXFourier * cosXFourier)
       grad2XcosXFourier = self.fourier(grad2XcosX * ellLimits)
       grad2XcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-      grad2XcosXFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+      grad2XcosXFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
       grad2XcosXFourier[np.where(np.isfinite(grad2XcosXFourier)==False)] = 0.
       #
       grad2YcosX = self.inverseFourier(gradYFourier * cosXFourier)
       grad2YcosXFourier = self.fourier(grad2YcosX * ellLimits)
       grad2YcosXFourier *= (self.lx**2 - self.ly**2)   # for cos
-      grad2YcosXFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+      grad2YcosXFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
       grad2YcosXFourier[np.where(np.isfinite(grad2YcosXFourier)==False)] = 0.
       #
       grad2XcosY = self.inverseFourier(gradXFourier * cosYFourier)
       grad2XcosYFourier = self.fourier(grad2XcosY * ellLimits)
       grad2XcosYFourier *= 4. * self.lx * self.ly   # for cos
-      grad2XcosYFourier *= divide(2. * self.lx, self.l**4) / 1.j # for grad
+      grad2XcosYFourier *= divideArr(2. * self.lx, self.l**4) / 1.j # for grad
       grad2XcosYFourier[np.where(np.isfinite(grad2XcosYFourier)==False)] = 0.
       #
       grad2YcosY = self.inverseFourier(gradYFourier * cosYFourier)
       grad2YcosYFourier = self.fourier(grad2YcosY * ellLimits)
       grad2YcosYFourier *= 4. * self.lx * self.ly   # for cos
-      grad2YcosYFourier *= divide(2. * self.ly, self.l**4) / 1.j # for grad
+      grad2YcosYFourier *= divideArr(2. * self.ly, self.l**4) / 1.j # for grad
       grad2YcosYFourier[np.where(np.isfinite(grad2YcosXFourier)==False)] = 0.
       #
       # sum
@@ -3561,10 +3561,10 @@ class FlatMap(object):
          return result
       
       # useful terms
-      fx = divide((self.lx**2-self.ly**2), self.l**2)
+      fx = divideArr((self.lx**2-self.ly**2), self.l**2)
       fx[np.where(np.isfinite(fx)==False)] = 0.
       #
-      fy = divide(self.lx*self.ly, self.l**2)
+      fy = divideArr(self.lx*self.ly, self.l**2)
       fy[np.where(np.isfinite(fy)==False)] = 0.
    
       # First, the symmetric term
@@ -3770,7 +3770,7 @@ class FlatMap(object):
          self.plotFourier(term1Fourier + term2Fourier)
 
       # get phi from kappa
-      resultFourier *= divide(-2., self.l**2)
+      resultFourier *= divideArr(-2.*np.ones_like(self.l), self.l**2)
       resultFourier[np.where(np.isfinite(resultFourier)==False)] = 0.
       if test:
          print("checking the power spectrum of phi map")
@@ -3854,10 +3854,10 @@ class FlatMap(object):
          return result
       
       # useful terms
-      fDiff = divide((self.lx**2-self.ly**2), self.l**2)
+      fDiff = divideArr((self.lx**2-self.ly**2), self.l**2)
       fDiff[np.where(np.isfinite(fDiff)==False)] = 0.
       #
-      fProd = divide(self.lx*self.ly, self.l**2)
+      fProd = divideArr(self.lx*self.ly, self.l**2)
       fProd[np.where(np.isfinite(fProd)==False)] = 0.
    
       # First, the symmetric term
@@ -4012,10 +4012,10 @@ class FlatMap(object):
          return result
       
       # useful terms
-      fDiff = divide((self.lx**2-self.ly**2), self.l**2)
+      fDiff = divideArr((self.lx**2-self.ly**2), self.l**2)
       fDiff[np.where(np.isfinite(fDiff)==False)] = 0.
       #
-      fProd = divide(self.lx*self.ly, self.l**2)
+      fProd = divideArr(self.lx*self.ly, self.l**2)
       fProd[np.where(np.isfinite(fProd)==False)] = 0.
 
       # First, the symmetric term
@@ -4186,7 +4186,7 @@ class FlatMap(object):
          term1x = self.inverseFourier(dataFourier= self.lx * WFFourier)
          term1x *= iVar
          term1xFourier = self.fourier(data=term1x)
-         term1xFourier *= divide(self.lx, (self.lx**2. + self.ly**2.))
+         term1xFourier *= divideArr(self.lx, (self.lx**2. + self.ly**2.))
 	 # correction for the artificial i in WFFourier
          term1xFourier /= 1.j
          #
@@ -4194,7 +4194,7 @@ class FlatMap(object):
          term1y = self.inverseFourier(dataFourier= self.ly * WFFourier)
          term1y *= iVar 
          term1yFourier = self.fourier(data=term1y)
-         term1yFourier *= divide(self.ly, (self.lx**2. + self.ly**2.))
+         term1yFourier *= divideArr(self.ly, (self.lx**2. + self.ly**2.))
 	 # correction for the artificial i in WFFourier
          term1yFourier /= 1.j
          
@@ -4476,7 +4476,7 @@ class FlatMap(object):
       ns[0,0] = ns[0,1]
       nk[0,0] = nk[0,1]
       
-      nkPSH = divide(nk, (1. - nk*ns*r*r))
+      nkPSH = divideArr(nk, (1. - nk*ns*r*r))
 
       # interpolate
       where = (self.l.flatten()>0.)*(self.l.flatten()<2.*lMax)
