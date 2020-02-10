@@ -1,3 +1,4 @@
+from __future__ import division
 from headers import *
 
 ##################################################################################
@@ -82,6 +83,10 @@ def divide(x, y, exceptOut=0.):
    '''Returns 0. or any requested value
    when dividing by zero.
    '''
-   try: return x/y
+   try:
+      #np.seterr(divide='ignore')
+      result = np.divide(x, y)
+      result[np.where(np.isfinite(result)==False)] = 0.
+      return result
    except ZeroDivisionError: return exceptOut
 

@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import map
 import universe
 reload(universe)
 from universe import *
@@ -25,7 +28,7 @@ from flat_map import *
 
 ##################################################################################
 ##################################################################################
-print "Map properties"
+print("Map properties")
 
 # number of pixels for the flat map
 nX = 400 #1200
@@ -47,7 +50,7 @@ lRange = (1., 2.*lMax)  # range for power spectra
 
 
 ##################################################################################
-print "CMB experiment properties"
+print("CMB experiment properties")
 
 # Adjust the lMin and lMax to the assumptions of the analysis
 # CMB S3 specs
@@ -58,12 +61,12 @@ forCtotal = lambda l: cmb.flensedTT(l)+cmb.fdetectorNoise(l)+cmb.fCIB(l)+cmb.ftS
 #
 # reinterpolate: gain factor 10 in speed
 L = np.logspace(np.log10(lMin/2.), np.log10(2.*lMax), 1001, 10.)
-F = np.array(map(forCtotal, L))
+F = np.array(list(map(forCtotal, L)))
 cmb.fCtotal = interp1d(L, F, kind='linear', bounds_error=False, fill_value=0.)
 
 
 ##################################################################################
-print "CMB lensing power spectrum"
+print("CMB lensing power spectrum")
 
 u = UnivPlanck15()
 halofit = Halofit(u, save=False)
@@ -73,15 +76,15 @@ p2d_cmblens = P2dAuto(u, halofit, w_cmblens, save=False)
 
 ##################################################################################
 ##################################################################################
-print "Compute the statistical uncertainty on the reconstructed lensing convergence"
+print("Compute the statistical uncertainty on the reconstructed lensing convergence")
 
-print "- standard quadratic estimator"
+print("- standard quadratic estimator")
 fNqCmb_fft = baseMap.forecastN0Kappa(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, test=False)
-print "- magnification estimator"
+print("- magnification estimator")
 fNdCmb_fft = baseMap.forecastN0KappaDilation(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, corr=True, test=False)
-print "- shear E-mode estimator"
+print("- shear E-mode estimator")
 fNsCmb_fft = baseMap.forecastN0KappaShear(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, corr=True, test=False)
-print "- point source hardened estimator"
+print("- point source hardened estimator")
 fNkPSHCmb_fft = baseMap.forecastN0KappaPSH(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, test=False, cache=None)
 #print "- shear B-mode estimator"
 #fNsBCmb_fft = baseMap.forecastN0KappaShearB(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, corr=True, test=False)
@@ -101,7 +104,7 @@ cPSH = 'purple'
 
 
 ##################################################################################
-print "plot component power spectra"
+print("plot component power spectra")
 
 fig=plt.figure(0)
 ax=fig.add_subplot(111)
@@ -109,7 +112,7 @@ ax=fig.add_subplot(111)
 ax.loglog(L,cmb.fCtotal(L),'k-',label='total')
 #
 flensedTT = lambda l : cmb.flensedTT(l)
-F = np.array(map(flensedTT, L))
+F = np.array(list(map(flensedTT, L)))
 cmb.flensedTT = interp1d(L, F, kind='linear', bounds_error=False, fill_value=0.)
 ax.loglog(L,cmb.flensedTT(L),'gray',label='lensed CMB')
 #
@@ -117,17 +120,17 @@ ax.loglog(L,cmb.fdetectorNoise(L),'k--',label='detector noise')
 ax.loglog(L,cmb.fCIB(L),'green',label='CIB')
 #
 ftSZ = lambda l : cmb.ftSZ(l)
-F = np.array(map(ftSZ, L))
+F = np.array(list(map(ftSZ, L)))
 cmb.ftSZ = interp1d(L, F, kind='linear', bounds_error=False, fill_value=0.)
 ax.loglog(L,ftSZ(L),'blue',label='tSZ')
 #
 fkSZ = lambda l : cmb.fkSZ(l)
-F = np.array(map(fkSZ, L))
+F = np.array(list(map(fkSZ, L)))
 cmb.fkSZ = interp1d(L, F, kind='linear', bounds_error=False, fill_value=0.)
 ax.loglog(L,cmb.fkSZ(L),'red',label='kSZ')
 #
 fradioPoisson = lambda l : cmb.fradioPoisson(l)
-F = np.array(map(fradioPoisson, L))
+F = np.array(list(map(fradioPoisson, L)))
 cmb.fradioPoisson = interp1d(L, F, kind='linear', bounds_error=False, fill_value=0.)
 ax.loglog(L,cmb.fradioPoisson(L),'gold',label='radio PS')
 #
@@ -139,7 +142,7 @@ plt.show()
 
  
 ##################################################################################
-print "Plot noise power spectra"
+print("Plot noise power spectra")
 
 fig=plt.figure(0)
 ax=fig.add_subplot(111)
@@ -172,15 +175,15 @@ plt.show()
 
 
 ##################################################################################
-print "Plot signal to noise"
+print("Plot signal to noise")
 
 fig = plt.figure(0)
 ax = fig.add_subplot(111)
 #
-ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.)/Ns, c=cS, label=r'Shear E')
-ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.)/Nd, c=cD, label=r'Mag.')
-ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.)/Npsh, c=cPSH, label=r'PSH')
-ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.)/Nq, c=cQ, label=r'QE')
+ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.) / Ns, c=cS, label=r'Shear E')
+ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.) / Nd, c=cD, label=r'Mag.')
+ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.) / Npsh, c=cPSH, label=r'PSH')
+ax.plot(L, p2d_cmblens.fPinterp(L)*(2.*L+1.) / Nq, c=cQ, label=r'QE')
 #
 ax.legend(loc=2, fontsize='x-small', labelspacing=0.1)
 ax.set_xlabel(r'$L$')
@@ -190,99 +193,99 @@ plt.show()
 
 
 ##################################################################################
-print "Generate GRF unlensed CMB map (debeamed)"
+print("Generate GRF unlensed CMB map (debeamed)")
 
 cmb0Fourier = baseMap.genGRF(cmb.funlensedTT, test=False)
 cmb0 = baseMap.inverseFourier(cmb0Fourier)
-print "plot unlensed CMB map"
+print("plot unlensed CMB map")
 baseMap.plot(cmb0)
-print "check the power spectrum"
+print("check the power spectrum")
 lCen, Cl, sCl = baseMap.powerSpectrum(cmb0Fourier, theory=[cmb.funlensedTT], plot=True, save=False)
 
 
 ##################################################################################
-print "Generate GRF kappa map"
+print("Generate GRF kappa map")
 
 kCmbFourier = baseMap.genGRF(p2d_cmblens.fPinterp, test=False)
 kCmb = baseMap.inverseFourier(kCmbFourier)
-print "plot kappa map"
+print("plot kappa map")
 baseMap.plot(kCmb)
-print "check the power spectrum"
+print("check the power spectrum")
 lCen, Cl, sCl = baseMap.powerSpectrum(kCmbFourier, theory=[p2d_cmblens.fPinterp], plot=True, save=False)
 
 
 ##################################################################################
-print "Lens the CMB map"
+print("Lens the CMB map")
 
 lensedCmb = baseMap.doLensing(cmb0, kappaFourier=kCmbFourier)
 lensedCmbFourier = baseMap.fourier(lensedCmb)
-print "plot lensed CMB map"
+print("plot lensed CMB map")
 baseMap.plot(lensedCmb, save=False)
-print "check the power spectrum"
+print("check the power spectrum")
 lCen, Cl, sCl = baseMap.powerSpectrum(lensedCmbFourier, theory=[cmb.funlensedTT, cmb.flensedTT], plot=True, save=False)
 
 
 ##################################################################################
-print "Add white detector noise (debeamed)"
+print("Add white detector noise (debeamed)")
 
 noiseFourier = baseMap.genGRF(cmb.fdetectorNoise, test=False)
 totalCmbFourier = lensedCmbFourier + noiseFourier
 totalCmb = baseMap.inverseFourier(totalCmbFourier)
 baseMap.plot(totalCmb)
-print "check the power spectrum"
+print("check the power spectrum")
 lCen, Cl, sCl = baseMap.powerSpectrum(totalCmbFourier,theory=[cmb.funlensedTT, cmb.flensedTT, cmb.fCtotal], plot=True, save=False)
 
 
 ##################################################################################
-print "Reconstructing kappa: standard quadratic estimator"
+print("Reconstructing kappa: standard quadratic estimator")
 
 pathQCmb = "./output/qCmb.txt"
 baseMap.computeQuadEstKappaNorm(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, dataFourier=totalCmbFourier, test=False, path=pathQCmb)
 qCmbFourier = baseMap.loadDataFourier(pathQCmb)
 
-print "Auto-power: kappa_rec"
+print("Auto-power: kappa_rec")
 lCen, Cl, sCl = baseMap.powerSpectrum(qCmbFourier,theory=[p2d_cmblens.fPinterp, fNqCmb_fft], plot=True, save=False)
 
-print "Cross-power: kappa_rec x kappa_true"
+print("Cross-power: kappa_rec x kappa_true")
 lCen, Cl, sCl = baseMap.crossPowerSpectrum(qCmbFourier, kCmbFourier, theory=[p2d_cmblens.fPinterp, fNqCmb_fft], plot=True, save=False)
 
 
 ##################################################################################
-print "Reconstructing kappa: shear estimator"
+print("Reconstructing kappa: shear estimator")
 
 pathSCmb = "./output/sCmb.txt"
 baseMap.computeQuadEstKappaShearNormCorr(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, dataFourier=totalCmbFourier, test=False, path=pathSCmb)
 sCmbFourier = baseMap.loadDataFourier(pathSCmb)
 
-print "Auto-power: kappa_rec"
+print("Auto-power: kappa_rec")
 lCen, Cl, sCl = baseMap.powerSpectrum(sCmbFourier,theory=[p2d_cmblens.fPinterp, fNsCmb_fft], plot=True, save=False)
 
-print "Cross-power: kappa_rec x kappa_true"
+print("Cross-power: kappa_rec x kappa_true")
 lCen, Cl, sCl = baseMap.crossPowerSpectrum(sCmbFourier, kCmbFourier, theory=[p2d_cmblens.fPinterp, fNsCmb_fft], plot=True, save=False)
 
 
 ##################################################################################
-print "Reconstructing kappa: magnification estimator"
+print("Reconstructing kappa: magnification estimator")
 
 pathDCmb = "./output/dCmb.txt"
 baseMap.computeQuadEstKappaDilationNormCorr(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, dataFourier=totalCmbFourier, test=False, path=pathDCmb)
 dCmbFourier = baseMap.loadDataFourier(pathDCmb)
 
-print "Auto-power: kappa_rec"
+print("Auto-power: kappa_rec")
 lCen, Cl, sCl = baseMap.powerSpectrum(dCmbFourier,theory=[p2d_cmblens.fPinterp, fNdCmb_fft], plot=True, save=False)
 
-print "Cross-power: kappa_rec x kappa_true"
+print("Cross-power: kappa_rec x kappa_true")
 lCen, Cl, sCl = baseMap.crossPowerSpectrum(dCmbFourier, kCmbFourier, theory=[p2d_cmblens.fPinterp, fNdCmb_fft], plot=True, save=False)
 
 ##################################################################################
-print "Reconstructing kappa: point source hardened estimator"
+print("Reconstructing kappa: point source hardened estimator")
 
 pathPSHCmb = "./output/pshCmb.txt"
 baseMap.computeQuadEstKappaPointSourceHardenedNorm(cmb.funlensedTT, cmb.fCtotal, lMin=lMin, lMax=lMax, dataFourier=totalCmbFourier, test=False, path=pathPSHCmb)
 pshCmbFourier = baseMap.loadDataFourier(pathPSHCmb)
 
-print "Auto-power: kappa_rec"
-print "NOISE IS NOT ACCURATE AT ALL"
+print("Auto-power: kappa_rec")
+print("NOISE IS NOT ACCURATE AT ALL")
 lCen, Cl, sCl = baseMap.powerSpectrum(pshCmbFourier,theory=[p2d_cmblens.fPinterp, fNqCmb_fft], plot=True, save=False)
 
 #print "Cross-power: kappa_rec x kappa_true"

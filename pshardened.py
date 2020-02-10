@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import map
+from past.utils import old_div
 import importlib
 import sys
 
@@ -52,12 +55,12 @@ lRange = (1., 2.*lMax)  # range for power spectra
 #print("Generate Poisson point source map")
 
 sbar = 1.5e-4
-singleA = (baseMap.fSky * 4.*np.pi) / (baseMap.nX*baseMap.nY)
+singleA = old_div((baseMap.fSky * 4.*np.pi), (baseMap.nX*baseMap.nY))
 poisson = baseMap.genPoissonWhiteNoise(nbar=5.e4, norm=False, test=False)
-scaledPoisson = poisson * sbar / singleA
+scaledPoisson = old_div(poisson * sbar, singleA)
 scaledPoissonFourier = baseMap.fourier(scaledPoisson)
 
-const = sbar**2. / (4. * np.pi * baseMap.fSky)
+const = old_div(sbar**2., (4. * np.pi * baseMap.fSky))
 poissonTheory = lambda l: const * np.sum(poisson) + l*0
 
 #print "plot scaled poisson map"
@@ -269,10 +272,10 @@ baseMap.computeQuadEstSNorm(fCtotal, lMin=lMin, lMax=lMax, dataFourier=totalLens
 pS2Fourier = baseMap.loadDataFourier(pathS2)
 
 #print "Auto-power: S_rec"
-lCen, Cl, sCl = baseMap.powerSpectrum(pS2Fourier/sbar,theory=[poissonTheory], plot=False, save=False)
+lCen, Cl, sCl = baseMap.powerSpectrum(old_div(pS2Fourier,sbar),theory=[poissonTheory], plot=False, save=False)
 
 #print "Cross-power: S_rec x S_true"
-lCen, Cl, sCl = baseMap.crossPowerSpectrum(pS2Fourier/sbar, scaledPoissonFourier, theory=[poissonTheory], plot=False, save=False)
+lCen, Cl, sCl = baseMap.crossPowerSpectrum(old_div(pS2Fourier,sbar), scaledPoissonFourier, theory=[poissonTheory], plot=False, save=False)
 
 ##print "Plot S_rec"
 #pS2 = baseMap.inverseFourier(pS2Fourier)

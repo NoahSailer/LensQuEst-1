@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import map
+from past.utils import old_div
 import universe
 reload(universe)
 from universe import *
@@ -24,7 +28,7 @@ from flat_map import *
 
 
 ##################################################################################
-print "Map properties"
+print("Map properties")
 
 # number of pixels for the flat map
 nX = 400 #1200
@@ -46,7 +50,7 @@ lRange = (1., 2.*lMax)  # range for power spectra
 
 
 ##################################################################################
-print "CMB experiment properties"
+print("CMB experiment properties")
 
 # Adjust the lMin and lMax to the assumptions of the analysis
 # CMB S3 specs
@@ -55,7 +59,7 @@ cmb = StageIVCMB(beam=1., noise=1., lMin=lMin, lMaxT=lMax, lMaxP=lMax, atm=False
 
 
 ##################################################################################
-print "CMB lensing power spectrum"
+print("CMB lensing power spectrum")
 
 u = UnivPlanck15()
 halofit = Halofit(u, save=False)
@@ -64,7 +68,7 @@ p2d_cmblens = P2dAuto(u, halofit, w_cmblens, save=False)
 
 
 ##################################################################################
-print "Generate GRF kappa map"
+print("Generate GRF kappa map")
 
 kCmbFourier = baseMap.genGRF(p2d_cmblens.fPinterp, test=False)
 kCmb = baseMap.inverseFourier(kCmbFourier)
@@ -81,22 +85,22 @@ def makeMap():
    lensedCmb = baseMap.doLensing(cmb0, kappaFourier=kCmbFourier)
    lensedCmbFourier = baseMap.fourier(lensedCmb)
 
-   singleA = (baseMap.fSky * 4.*np.pi) / (baseMap.nX*baseMap.nY)
+   singleA = old_div((baseMap.fSky * 4.*np.pi), (baseMap.nX*baseMap.nY))
    poisson = baseMap.genPoissonWhiteNoise(nbar=5.e4, norm=False, test=False)
-   scaledPoisson = poisson * sbar / singleA
+   scaledPoisson = old_div(poisson * sbar, singleA)
    scaledPoissonFourier = baseMap.fourier(scaledPoisson)
 
    totalLensedFourier = lensedCmbFourier + scaledPoissonFourier
    totalLensed = baseMap.inverseFourier(totalLensedFourier)
 
-   const = sbar**2. / (4. * np.pi * baseMap.fSky)
+   const = old_div(sbar**2., (4. * np.pi * baseMap.fSky))
    poissonTheory = lambda l: const * np.sum(poisson) + l*0
 
    # Total power spectrum, for the lens reconstruction
    forCtotal = lambda l: cmb.flensedTT(l) + poissonTheory(l)
    # reinterpolate: gain factor 10 in speed
    L = np.logspace(np.log10(lMin/2.), np.log10(2.*lMax), 1001, 10.)
-   F = np.array(map(forCtotal, L))
+   F = np.array(list(map(forCtotal, L)))
    cmb.fCtotal = interp1d(L, F, kind='linear', bounds_error=False, fill_value=0.)
 
    return totalLensedFourier
@@ -118,10 +122,10 @@ def reconstructKappa(totalLensedFourier, pathkBH="./output/kBH.txt"):
 
 ##################################################################################
 ##################################################################################
-print "Doing things"
+print("Doing things")
 
 totalLensedFourier = makeMap()
 lCen, Cl = reconstructKappa(totalLensedFourier=totalLensedFourier)
-print lCen
-print Cl
+print(lCen)
+print(Cl)
 

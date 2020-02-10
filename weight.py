@@ -1,3 +1,9 @@
+from __future__ import division
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from headers import *
 ##################################################################################
 
@@ -25,7 +31,7 @@ class Projection(object):
       to the mean overdensity along the line of sight,
       measured between aMin and aMax
       """
-      integrand = lambda a: 3.e5/(self.U.Hubble(a) * a**2) * self.f(a)
+      integrand = lambda a: old_div(3.e5,(self.U.Hubble(a) * a**2)) * self.f(a)
       result = integrate.quad(integrand, aMin, aMax, epsabs=0., epsrel=1.e-3)[0]
       return result
 
@@ -41,26 +47,26 @@ class Projection(object):
       # range to plot
       Na = 101
       A = np.linspace(self.aMin, self.aMax, Na)
-      ComovDistToObs = np.array( map( lambda a: self.U.ComovDist(a, self.U.a_obs), A ) )
-      W = np.array( map( lambda a: self.f(a), A ) )
+      ComovDistToObs = np.array( [self.U.ComovDist(a, self.U.a_obs) for a in A] )
+      W = np.array( [self.f(a) for a in A] )
       Z = 1./A - 1.
-      H_A = self.U.Hubble(A) / 3.e5   # inverse hubble length: H/c in (h Mpc^-1)
+      H_A = old_div(self.U.Hubble(A), 3.e5)   # inverse hubble length: H/c in (h Mpc^-1)
       
       # compute weight for n-pt function
       F_a = 1. / (H_A * A**2)
-      F_a *= W**nW / ComovDistToObs**nd
+      F_a *= old_div(W**nW, ComovDistToObs**nd)
       #
       F_z = 1. / H_A
-      F_z *= W**nW / ComovDistToObs**nd
+      F_z *= old_div(W**nW, ComovDistToObs**nd)
       #
-      F_chi = W**nW / ComovDistToObs**nd
+      F_chi = old_div(W**nW, ComovDistToObs**nd)
       
       #return Z, W/H_A
       
       # projection kernel W
       fig=plt.figure(-1)
       ax=plt.subplot(111)
-      ax.plot(Z, W/H_A, 'b', lw=2)
+      ax.plot(Z, old_div(W,H_A), 'b', lw=2)
       ax.set_xlabel(r'$z$', fontsize=22)
       ax.set_ylabel(r'$W (z)$', fontsize=22)
       #fig.savefig("./figures/weight/W_cmblens.pdf")
@@ -192,8 +198,8 @@ class WeightLensSingle(Projection):
       a is dimless, Wlensing(a) in (h Mpc^-1)
       """
       d_a = self.U.ComovDist(a, self.U.a_obs)
-      wlensing = 1.5 * (100./3.e5)**2 * self.U.OmM * d_a / a
-      wlensing *= 1. - d_a/self.dist_source
+      wlensing = old_div(1.5 * (100./3.e5)**2 * self.U.OmM * d_a, a)
+      wlensing *= 1. - old_div(d_a,self.dist_source)
       return wlensing
    
    def testHandEtAl13_fig1(self):
@@ -205,8 +211,8 @@ class WeightLensSingle(Projection):
       # from my code
       Zme = np.linspace(0., 10., 101)
       Ame = 1./(1.+Zme)
-      fW = lambda a: self.f(a) * (3.e5/self.U.Hubble(a))
-      Wgal_me = np.array(map(fW, Ame))
+      fW = lambda a: self.f(a) * (old_div(3.e5,self.U.Hubble(a)))
+      Wgal_me = np.array(list(map(fW, Ame)))
       Wgal_me /= np.max(Wgal_me)
 
       fig=plt.figure(0)
@@ -249,15 +255,15 @@ class WeightLensOguriTakada11(Projection):
       """source distribution from Oguri & Takada 2011
       int_0^inf dz dPdz = 1
       """
-      result = 0.5 * z**2 / self.z0**3
-      result *= exp( -z / self.z0)
+      result = old_div(0.5 * z**2, self.z0**3)
+      result *= exp( old_div(-z, self.z0))
       return result
    
    
    def f(self, a):
       d_a = self.U.ComovDist(a, self.U.a_obs)
-      result = 1.5 * (100./3.e5)**2 * self.U.OmM * d_a / a
-      integrand = lambda a_s: self.fdpdz(1./a_s-1.) /a_s**2 * (1. - d_a/self.U.ComovDist(a_s, self.U.a_obs))
+      result = old_div(1.5 * (100./3.e5)**2 * self.U.OmM * d_a, a)
+      integrand = lambda a_s: old_div(self.fdpdz(1./a_s-1.),a_s**2) * (1. - old_div(d_a,self.U.ComovDist(a_s, self.U.a_obs)))
       result *= integrate.quad(integrand, self.aMin, a, epsabs=0, epsrel=1.e-2)[0]
       return result
 
@@ -277,9 +283,9 @@ class WeightLensHandEtAl13(Projection):
       a = 0.531
       b = 7.810
       c = 0.517
-      fdpdz_nonorm = lambda z: A*(z**a + z**(a*b))/(z**b + c)
+      fdpdz_nonorm = lambda z: old_div(A*(z**a + z**(a*b)),(z**b + c))
       norm = integrate.quad(fdpdz_nonorm, 0., np.inf, epsabs=0, epsrel=1.e-2)[0]
-      self.fdpdz = lambda z: fdpdz_nonorm(z) / norm
+      self.fdpdz = lambda z: old_div(fdpdz_nonorm(z), norm)
       
       # a for mass func, biases, and projection
       self.aMin = 1./(1.+10.)  # arbitrary for now
@@ -288,8 +294,8 @@ class WeightLensHandEtAl13(Projection):
 
    def f(self, a):
       d_a = self.U.ComovDist(a, self.U.a_obs)
-      result = 1.5 * (100./3.e5)**2 * self.U.OmM * d_a / a
-      integrand = lambda a_s: self.fdpdz(1./a_s-1.) /a_s**2 * (1. - d_a/self.U.ComovDist(a_s, self.U.a_obs))
+      result = old_div(1.5 * (100./3.e5)**2 * self.U.OmM * d_a, a)
+      integrand = lambda a_s: old_div(self.fdpdz(1./a_s-1.),a_s**2) * (1. - old_div(d_a,self.U.ComovDist(a_s, self.U.a_obs)))
       result *= integrate.quad(integrand, self.aMin, a, epsabs=0, epsrel=1.e-2)[0]
       return result
 
@@ -300,8 +306,8 @@ class WeightLensHandEtAl13(Projection):
       A = 1./(1.+Z)
       Wgal_ref = Data[:, 1]
       # from my code
-      fW = lambda a: self.f(a) * (3.e5/self.U.Hubble(a))
-      Wgal_me = np.array(map(fW, A))
+      fW = lambda a: self.f(a) * (old_div(3.e5,self.U.Hubble(a)))
+      Wgal_me = np.array(list(map(fW, A)))
       Wgal_me /= np.max(Wgal_me)
       
       fig=plt.figure(0)
@@ -324,13 +330,13 @@ class WeightLensHandEtAl13(Projection):
       Data = np.genfromtxt('./input/tests/HandEtAl13/HandEtAl13_fig2.txt')
       # my interpolation
       Z = np.linspace(0., 3., 101)
-      Me = np.array(map(self.fdpdz, Z))
+      Me = np.array(list(map(self.fdpdz, Z)))
       
       fig=plt.figure(0)
       ax=plt.subplot(111)
       #
-      ax.plot(Data[:,0], Data[:, 1]/np.max(Data[:, 1]), 'b-', label=r'data from fig2')
-      ax.plot(Z, Me/np.max(Me), 'r-', label=r'fit from eq6')
+      ax.plot(Data[:,0], old_div(Data[:, 1],np.max(Data[:, 1])), 'b-', label=r'data from fig2')
+      ax.plot(Z, old_div(Me,np.max(Me)), 'r-', label=r'fit from eq6')
       #
       ax.legend(loc=1)
       ax.set_xlabel(r'$z$', fontsize=18)
@@ -353,7 +359,7 @@ class WeightLensDasEtAl13(Projection):
       
       # source distribution (eq11 from Das Errard Spergel 2013)
       z0 = 0.69   # ie median z is 1
-      self.fdpdz = lambda z: 1.5 * z**2/z0**3 * np.exp(-(z/z0)**1.5)
+      self.fdpdz = lambda z: old_div(1.5 * z**2,z0**3) * np.exp(-(old_div(z,z0))**1.5)
       
       # a for mass func, biases, and projection
       self.aMin = 1./(1.+10.)  # arbitrary for now
@@ -362,8 +368,8 @@ class WeightLensDasEtAl13(Projection):
    
    def f(self, a):
       d_a = self.U.ComovDist(a, self.U.a_obs)
-      result = 1.5 * (100./3.e5)**2 * self.U.OmM * d_a / a
-      integrand = lambda a_s: self.fdpdz(1./a_s-1.) /a_s**2 * (1. - d_a/self.U.ComovDist(a_s, self.U.a_obs))
+      result = old_div(1.5 * (100./3.e5)**2 * self.U.OmM * d_a, a)
+      integrand = lambda a_s: old_div(self.fdpdz(1./a_s-1.),a_s**2) * (1. - old_div(d_a,self.U.ComovDist(a_s, self.U.a_obs)))
       result *= integrate.quad(integrand, self.aMin, a, epsabs=0, epsrel=1.e-2)[0]
       return result
 
@@ -373,17 +379,17 @@ class WeightLensDasEtAl13(Projection):
       Z = 1./A - 1.
    
       # source distribution
-      dPdz = np.array(map(self.fdpdz, Z))
+      dPdz = np.array(list(map(self.fdpdz, Z)))
       
       # lensing kernel
-      W = np.array( map( lambda a: self.f(a), A ) )
-      H_A = self.U.Hubble(A) / 3.e5   # inverse hubble length: H/c in (h Mpc^-1)
+      W = np.array( [self.f(a) for a in A] )
+      H_A = old_div(self.U.Hubble(A), 3.e5)   # inverse hubble length: H/c in (h Mpc^-1)
       
       fig=plt.figure(-1)
       ax=fig.add_subplot(111)
       #
-      ax.plot(Z, dPdz/np.max(dPdz), 'r', lw=2, label=r'source')
-      ax.plot(Z, (W/H_A)/np.max(W/H_A), 'b', lw=2, label=r'$\kappa$')
+      ax.plot(Z, old_div(dPdz,np.max(dPdz)), 'r', lw=2, label=r'source')
+      ax.plot(Z, old_div((old_div(W,H_A)),np.max(old_div(W,H_A))), 'b', lw=2, label=r'$\kappa$')
       #
       ax.legend(loc=1)
       ax.set_xlabel(r'$z$', fontsize=22)
@@ -407,13 +413,13 @@ class WeightLensCustom(Projection):
       self.fdndz = fdndz
       self.ngal = integrate.quad(self.fdndz, 1./self.aMax-1., 1./self.aMin-1., epsabs=0., epsrel=1.e-3)[0]
       # dpdz normalized such that int dz dpdz = 1
-      self.fdpdz = lambda z: fdndz(z) / self.ngal
+      self.fdpdz = lambda z: old_div(fdndz(z), self.ngal)
 
    
    def f(self, a):
       d_a = self.U.ComovDist(a, self.U.a_obs)
-      result = 1.5 * (100./3.e5)**2 * self.U.OmM * d_a / a
-      integrand = lambda a_s: self.fdpdz(1./a_s-1.) /a_s**2 * (1. - d_a/self.U.ComovDist(a_s, self.U.a_obs))
+      result = old_div(1.5 * (100./3.e5)**2 * self.U.OmM * d_a, a)
+      integrand = lambda a_s: old_div(self.fdpdz(1./a_s-1.),a_s**2) * (1. - old_div(d_a,self.U.ComovDist(a_s, self.U.a_obs)))
       result *= integrate.quad(integrand, self.aMin, a, epsabs=0, epsrel=1.e-2)[0]
       return result
 
@@ -423,17 +429,17 @@ class WeightLensCustom(Projection):
       Z = 1./A - 1.
    
       # source distribution
-      dPdz = np.array(map(self.fdpdz, Z))
+      dPdz = np.array(list(map(self.fdpdz, Z)))
       
       # lensing kernel
-      W = np.array( map( lambda a: self.f(a), A ) )
-      H_A = self.U.Hubble(A) / 3.e5   # inverse hubble length: H/c in (h Mpc^-1)
+      W = np.array( [self.f(a) for a in A] )
+      H_A = old_div(self.U.Hubble(A), 3.e5)   # inverse hubble length: H/c in (h Mpc^-1)
       
       fig=plt.figure(-1)
       ax=fig.add_subplot(111)
       #
-      ax.plot(Z, dPdz/np.max(dPdz), 'r', lw=2, label=r'source')
-      ax.plot(Z, (W/H_A)/np.max(W/H_A), 'b', lw=2, label=r'$\kappa$')
+      ax.plot(Z, old_div(dPdz,np.max(dPdz)), 'r', lw=2, label=r'source')
+      ax.plot(Z, old_div((old_div(W,H_A)),np.max(old_div(W,H_A))), 'b', lw=2, label=r'$\kappa$')
       #
       ax.legend(loc=1)
       ax.set_xlabel(r'$z$', fontsize=22)
@@ -461,15 +467,15 @@ class WeightLensCIBSchmidt15(Projection):
       self.aMax = self.U.a_obs*(1.-epsilon)
       #
       # source distribution from Schmidt Menard Scranton+15
-      fdpdzNonNormalized = lambda z: z**alpha * np.exp( -(z / z0)**alpha)
+      fdpdzNonNormalized = lambda z: z**alpha * np.exp( -(old_div(z, z0))**alpha)
       # normalize to have int_zMin^zMax dz dPdz = 1
       norm = integrate.quad(fdpdzNonNormalized, 1./self.aMax, 1./self.aMin, epsabs=0, epsrel=1.e-4)[0]
-      self.fdpdz = lambda z: fdpdzNonNormalized(z) / norm
+      self.fdpdz = lambda z: old_div(fdpdzNonNormalized(z), norm)
    
    def f(self, a):
       d_a = self.U.ComovDist(a, self.U.a_obs)
-      result = 1.5 * (100./3.e5)**2 * self.U.OmM * d_a / a
-      integrand = lambda a_s: self.fdpdz(1./a_s-1.) /a_s**2 * (1. - d_a/self.U.ComovDist(a_s, self.U.a_obs))
+      result = old_div(1.5 * (100./3.e5)**2 * self.U.OmM * d_a, a)
+      integrand = lambda a_s: old_div(self.fdpdz(1./a_s-1.),a_s**2) * (1. - old_div(d_a,self.U.ComovDist(a_s, self.U.a_obs)))
       result *= integrate.quad(integrand, self.aMin, a, epsabs=0, epsrel=1.e-2)[0]
       return result
    
@@ -480,17 +486,17 @@ class WeightLensCIBSchmidt15(Projection):
       Z = 1./A - 1.
       
       # source distribution
-      dPdz = np.array(map(self.fdpdz, Z))
+      dPdz = np.array(list(map(self.fdpdz, Z)))
       
       # lensing kernel
-      W = np.array( map( lambda a: self.f(a), A ) )
-      H_A = self.U.Hubble(A) / 3.e5   # inverse hubble length: H/c in (h Mpc^-1)
+      W = np.array( [self.f(a) for a in A] )
+      H_A = old_div(self.U.Hubble(A), 3.e5)   # inverse hubble length: H/c in (h Mpc^-1)
       
       fig=plt.figure(-1)
       ax=fig.add_subplot(111)
       #
-      ax.plot(Z, dPdz/np.max(dPdz), 'r', lw=2, label=r'source')
-      ax.plot(Z, (W/H_A)/np.max(W/H_A), 'b', lw=2, label=r'$\kappa$')
+      ax.plot(Z, old_div(dPdz,np.max(dPdz)), 'r', lw=2, label=r'source')
+      ax.plot(Z, old_div((old_div(W,H_A)),np.max(old_div(W,H_A))), 'b', lw=2, label=r'$\kappa$')
       #
       ax.legend(loc=1)
       ax.set_xlabel(r'$z$', fontsize=22)
@@ -525,13 +531,13 @@ class WeightLensCIBPullen17(Projection):
       fdpdzNonNormalized = interp1d(data[:,0], data[:,1], kind='linear', bounds_error=False, fill_value=0.)
       # normalize to have int_zMin^zMax dz dPdz = 1
       norm = integrate.quad(fdpdzNonNormalized, 1./self.aMax, 1./self.aMin, epsabs=0, epsrel=1.e-4)[0]
-      self.fdpdz = lambda z: fdpdzNonNormalized(z) / norm
+      self.fdpdz = lambda z: old_div(fdpdzNonNormalized(z), norm)
       
    
    def f(self, a):
       d_a = self.U.ComovDist(a, self.U.a_obs)
-      result = 1.5 * (100./3.e5)**2 * self.U.OmM * d_a / a
-      integrand = lambda a_s: self.fdpdz(1./a_s-1.) /a_s**2 * (1. - d_a/self.U.ComovDist(a_s, self.U.a_obs))
+      result = old_div(1.5 * (100./3.e5)**2 * self.U.OmM * d_a, a)
+      integrand = lambda a_s: old_div(self.fdpdz(1./a_s-1.),a_s**2) * (1. - old_div(d_a,self.U.ComovDist(a_s, self.U.a_obs)))
       result *= integrate.quad(integrand, self.aMin, a, epsabs=0, epsrel=1.e-2)[0]
       return result
 
@@ -541,17 +547,17 @@ class WeightLensCIBPullen17(Projection):
       Z = 1./A - 1.
       
       # source distribution
-      dPdz = np.array(map(self.fdpdz, Z))
+      dPdz = np.array(list(map(self.fdpdz, Z)))
       
       # lensing kernel
-      W = np.array( map( lambda a: self.f(a), A ) )
-      H_A = self.U.Hubble(A) / 3.e5   # inverse hubble length: H/c in (h Mpc^-1)
+      W = np.array( [self.f(a) for a in A] )
+      H_A = old_div(self.U.Hubble(A), 3.e5)   # inverse hubble length: H/c in (h Mpc^-1)
       
       fig=plt.figure(-1)
       ax=fig.add_subplot(111)
       #
-      ax.plot(Z, dPdz/np.max(dPdz), 'r', lw=2, label=r'source')
-      ax.plot(Z, (W/H_A)/np.max(W/H_A), 'b', lw=2, label=r'$\kappa$')
+      ax.plot(Z, old_div(dPdz,np.max(dPdz)), 'r', lw=2, label=r'source')
+      ax.plot(Z, old_div((old_div(W,H_A)),np.max(old_div(W,H_A))), 'b', lw=2, label=r'$\kappa$')
       #
       ax.legend(loc=1)
       ax.set_xlabel(r'$z$', fontsize=22)
@@ -618,7 +624,7 @@ class WeightTracer(Projection):
       """projection kernel
       """
       z = 1./a - 1.
-      result = self.U.Hubble(a) / 3.e5
+      result = old_div(self.U.Hubble(a), 3.e5)
       result *= self.dndz(z)
       result /= self.ngal
       result *= self.b(z)
@@ -627,7 +633,7 @@ class WeightTracer(Projection):
    def plotDndz(self):
 
       Z = np.linspace(1./self.aMax-1., 1./self.aMin-1., 101)
-      Dndz = np.array(map(self.dndz, Z))
+      Dndz = np.array(list(map(self.dndz, Z)))
       # normalize such that int dz dn/dz = ngal in arcmin^-2
       Dndz /= (180.*60. / np.pi)**2
 
@@ -709,13 +715,13 @@ class WeightTracerLSSTGold(WeightTracer):
       self.b = lambda z: 1 + 0.84*z
       
       self.ngal_per_arcmin2 = 46.*10**(0.31*(iLim-25.)) # galaxies per squared arcmin
-      self.ngal = self.ngal_per_arcmin2 / (np.pi/180./60.)**2
+      self.ngal = old_div(self.ngal_per_arcmin2, (np.pi/180./60.)**2)
       
       # dn/dz, normalized such that int dz dn/dz = ngal
       # where ngal = number of gals per unit steradian
       self.z0 = 0.0417*iLim - 0.744
       # the normalization to ngal below is approximate, but correct to better than 1%
-      self.dndz = lambda z: self.ngal * (z/self.z0)**2 * np.exp(-z/self.z0) / (2.*self.z0)
+      self.dndz = lambda z: old_div(self.ngal * (old_div(z,self.z0))**2 * np.exp(old_div(-z,self.z0)), (2.*self.z0))
 
       super(WeightTracerLSSTGold, self).__init__(U, name=name)
 
@@ -740,19 +746,19 @@ class WeightTracerLSSTSources(WeightTracer):
       self.b = lambda z: 1 + 0.84*z
       
       self.ngal_per_arcmin2 = 26. # galaxies per squared arcmin
-      self.ngal = self.ngal_per_arcmin2 / (np.pi/180./60.)**2  # per steradian
+      self.ngal = old_div(self.ngal_per_arcmin2, (np.pi/180./60.)**2)  # per steradian
       
 
       # dn/dz, non-normalized
       self.z0 = 0.5
       self.alpha = 1.27
       self.beta = 1.02
-      f = lambda z: z**self.alpha * np.exp(-(z/self.z0)**self.beta)
+      f = lambda z: z**self.alpha * np.exp(-(old_div(z,self.z0))**self.beta)
       # normalization
       norm = integrate.quad(f, self.zMin, self.zMax, epsabs=0., epsrel=1.e-3)[0]
       # dn/dz, normalized such that int dz dn/dz = ngal
       # where ngal = number of gals per unit steradian
-      self.dndz = lambda z: self.ngal * f(z) / norm
+      self.dndz = lambda z: old_div(self.ngal * f(z), norm)
 
       super(WeightTracerLSSTSources, self).__init__(U, name=name)
 
@@ -777,7 +783,7 @@ class WeightTracerDESIQSO(WeightTracer):
       # where ngal = number of gals per unit steradian
       ngal = 180. # per deg^2
       ngal /= (np.pi/180.)**2
-      self.dndz = lambda z: ngal * (z>=0.9) * (z<=2.1) / (2.1-0.9)
+      self.dndz = lambda z: old_div(ngal * (z>=0.9) * (z<=2.1), (2.1-0.9))
 
       super(WeightTracerDESIQSO, self).__init__(U, name=name)
 
@@ -817,7 +823,7 @@ class WeightCIBPenin12(Projection):
    """
    
    def __init__(self, U, nu=217.e9, fluxCut=160.e-3, name='cibpenin12'):
-      super(WeightCIBPenin12, self).__init__(U, name=name+'_'+str(int(nu/1.e9))+'GHZ')
+      super(WeightCIBPenin12, self).__init__(U, name=name+'_'+str(int(old_div(nu,1.e9)))+'GHZ')
       self.nu = nu   # in Hz
       self.fluxCut = fluxCut  # in Jy
       
@@ -827,7 +833,7 @@ class WeightCIBPenin12(Projection):
       self.Z = np.genfromtxt("./input/cib_bethermin12_2sfm/converted/z.txt")
       self.A = 1./(1.+self.Z)
       self.Snu = np.genfromtxt("./input/cib_bethermin12_2sfm/converted/Snu.txt") # in Jy
-      self.dNdSnudzdOmega = np.genfromtxt("./input/cib_bethermin12_2sfm/converted/dNdSnudz_Planck"+str(int(nu/1.e9))+"GHz.txt")
+      self.dNdSnudzdOmega = np.genfromtxt("./input/cib_bethermin12_2sfm/converted/dNdSnudz_Planck"+str(int(old_div(nu,1.e9)))+"GHz.txt")
       # put A in growing order
       self.A = self.A[::-1]
       self.Z = self.Z[::-1]
@@ -842,10 +848,10 @@ class WeightCIBPenin12(Projection):
 
       # convert flux number counts to gal/Jy/(Mpc/h)^3
       # dNdSnudV in gal/Jy/(Mpc/h)^3
-      Chi = np.array(map(lambda a: self.U.ComovDist(a, 1.), self.A))
-      Hubble = np.array(map(lambda a: self.U.Hubble(a), self.A))
-      dV_dzdOmega = Chi**2 * (3.e5/Hubble)
-      self.dNdSnudV = self.dNdSnudzdOmega / dV_dzdOmega[:,np.newaxis]
+      Chi = np.array([self.U.ComovDist(a, 1.) for a in self.A])
+      Hubble = np.array([self.U.Hubble(a) for a in self.A])
+      dV_dzdOmega = Chi**2 * (old_div(3.e5,Hubble))
+      self.dNdSnudV = old_div(self.dNdSnudzdOmega, dV_dzdOmega[:,np.newaxis])
       
    
       '''
@@ -898,14 +904,14 @@ class WeightCIBPenin12(Projection):
    def fdPshotNoise_da(self, a, l):
       """contribution of each scale factor to the shot noise
       """
-      result = (3.e5/self.U.Hubble(a)) / a**2
+      result = old_div((old_div(3.e5,self.U.Hubble(a))), a**2)
       result *= self.U.ComovDist(a, 1.)**2 * self.jNu2(a)
       return result
    
    def fPshotNoise(self, l):
       """Shot noise for CIB 2d power spectrum
       """
-      integrand = lambda a: (3.e5/self.U.Hubble(a)) / a**2 *\
+      integrand = lambda a: old_div((old_div(3.e5,self.U.Hubble(a))), a**2) *\
                            self.U.ComovDist(a, 1.)**2 * self.jNu2(a)
       result = integrate.quad(integrand, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
       return result
@@ -913,7 +919,7 @@ class WeightCIBPenin12(Projection):
    def fTshotNoise(self, l):
       """shot noise for CIB 2d trispectrum
       """
-      integrand = lambda a: (3.e5/self.U.Hubble(a)) / a**2 *\
+      integrand = lambda a: old_div((old_div(3.e5,self.U.Hubble(a))), a**2) *\
                            self.U.ComovDist(a, 1.)**2 * self.jNu4(a)
       result = integrate.quad(integrand, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
       return result
@@ -925,12 +931,12 @@ class WeightCIBPenin12(Projection):
       their j_nu = my j_nu * chi^2 / a
       without the factor of a, this would be the relevant projection kernel for CIB
       """
-      Chi = np.array(map(lambda a: self.U.ComovDist(a, 1.), self.A))
+      Chi = np.array([self.U.ComovDist(a, 1.) for a in self.A])
       
       fig=plt.figure(0)
       ax=fig.add_subplot(111)
       #
-      ax.plot(self.Z, self.JNu1/self.A*Chi**2, 'b', lw=2, label=str(int(self.nu/1.e9))+' GHz')
+      ax.plot(self.Z, old_div(self.JNu1,self.A)*Chi**2, 'b', lw=2, label=str(int(old_div(self.nu,1.e9)))+' GHz')
       #
       ax.legend(loc=1)
       ax.set_yscale('log', nonposy='clip')
@@ -978,7 +984,7 @@ class WeightCIBPenin12(Projection):
       ax.legend(loc=3)
       ax.set_xscale('log', nonposx='clip')
       ax.set_yscale('log', nonposy='clip')
-      ax.set_xlabel(r'$S_\nu$ at $\nu=$'+str(np.int(self.nu/1.e9))+'GHz, [Jy]')
+      ax.set_xlabel(r'$S_\nu$ at $\nu=$'+str(np.int(old_div(self.nu,1.e9)))+'GHz, [Jy]')
       ax.set_ylabel(r'$dN/d\text{ln}S_{\nu}/dV$ [gal/(Mpc/h)$^3$]')
       #
       #fig.savefig("./figures/cib_penin12/bethermin12_dNdlnSnudV.pdf", bbox_inches='tight')
@@ -995,7 +1001,7 @@ class WeightCIBPenin12(Projection):
       ax.legend(loc=3)
       ax.set_xscale('log', nonposx='clip')
       ax.set_yscale('log', nonposy='clip')
-      ax.set_xlabel(r'$S_\nu$ at $\nu=$'+str(np.int(self.nu/1.e9))+'GHz, [Jy]')
+      ax.set_xlabel(r'$S_\nu$ at $\nu=$'+str(np.int(old_div(self.nu,1.e9)))+'GHz, [Jy]')
       ax.set_ylabel(r'$\frac{dP^\text{shot}}{d\text{ln}S_{\nu}} = S_{\nu}^2 \; dN/d\text{ln}S_{\nu}/dV$ [gal/(Mpc/h)$^3$]')
       #
       #fig.savefig("./figures/cib_penin12/bethermin12_Snu2dNdlnSnudV.pdf", bbox_inches='tight')
@@ -1012,7 +1018,7 @@ class WeightCIBPenin12(Projection):
       ax.legend(loc=3)
       ax.set_xscale('log', nonposx='clip')
       ax.set_yscale('log', nonposy='clip')
-      ax.set_xlabel(r'$S_\nu$ at $\nu=$'+str(np.int(self.nu/1.e9))+'GHz, [Jy]')
+      ax.set_xlabel(r'$S_\nu$ at $\nu=$'+str(np.int(old_div(self.nu,1.e9)))+'GHz, [Jy]')
       ax.set_ylabel(r'$\frac{d\mathcal{T}^\text{shot}}{d\text{ln}S_{\nu}} = S_{\nu}^4 \; dN/d\text{ln}S_{\nu}/dV$ [gal/(Mpc/h)$^3$]')
       #
       #fig.savefig("./figures/cib_penin12/bethermin12_Snu4dNdlnSnudV.pdf", bbox_inches='tight')
@@ -1021,21 +1027,21 @@ class WeightCIBPenin12(Projection):
 
 
    def plotJnu1(self):
-      Chi = np.array(map(lambda a: self.U.ComovDist(a, 1.), self.A))
+      Chi = np.array([self.U.ComovDist(a, 1.) for a in self.A])
       # inverse hubble length: H/c in (h Mpc^-1)
       # used to convert the kernel from chi to z
-      H = self.U.Hubble(self.A) / 3.e5
+      H = old_div(self.U.Hubble(self.A), 3.e5)
       # projection kernel
-      W = np.array(map(self.f, self.A))
+      W = np.array(list(map(self.f, self.A)))
       # factor to keep jnu in the plot
       factorJNu1 = 2.*self.JNu1[np.argmin(np.abs(self.Z-2.))]
 
       fig=plt.figure(0)
       ax=fig.add_subplot(111)
       #
-      ax.plot(self.Z, (Chi**2/H) / np.max(Chi**2/H), 'g', lw=1.5, label=r'$dV / dzd\Omega = \chi^2 c /H$')
-      ax.plot(self.Z, (self.JNu1) / factorJNu1, 'r', lw=1.5, label=r'$\bar{j}_\nu = \int dS_\nu \frac{dN_\text{gal}}{dVdS_\nu} S_\nu$')
-      ax.plot(self.Z, (W/H) / np.max(W/H), 'b', lw=3, label=r'$W_z =  \bar{j}_\nu \times dV/dzd\Omega$')
+      ax.plot(self.Z, old_div((old_div(Chi**2,H)), np.max(old_div(Chi**2,H))), 'g', lw=1.5, label=r'$dV / dzd\Omega = \chi^2 c /H$')
+      ax.plot(self.Z, old_div((self.JNu1), factorJNu1), 'r', lw=1.5, label=r'$\bar{j}_\nu = \int dS_\nu \frac{dN_\text{gal}}{dVdS_\nu} S_\nu$')
+      ax.plot(self.Z, old_div((old_div(W,H)), np.max(old_div(W,H))), 'b', lw=3, label=r'$W_z =  \bar{j}_\nu \times dV/dzd\Omega$')
       #
       ax.legend(loc=1)
       ax.set_ylim((0., 1.1))

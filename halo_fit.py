@@ -1,3 +1,8 @@
+from __future__ import division
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from headers import *
 
 ###################################################################
@@ -8,7 +13,7 @@ class ParamsHalofit(object):
       self.U = U
       
       # fitting functions
-      Omz = self.U.OmM * (1 + z)**3 / (self.U.OmM * (1 + z)**3 + (1.-self.U.OmM))
+      Omz = old_div(self.U.OmM * (1 + z)**3, (self.U.OmM * (1 + z)**3 + (1.-self.U.OmM)))
       self.f1 = Omz**(-0.0307)
       self.f2 = Omz**(-0.0585)
       self.f3 = Omz**(0.0743)
@@ -21,8 +26,8 @@ class ParamsHalofit(object):
 
       # derivatives of sigma2 at the non-linear scale
       h = 0.01
-      dsdR = (self.U.Sigma2(R_sigma+h, z, W3d_g) - self.U.Sigma2(R_sigma-h, z, W3d_g))/(2 * h)
-      d2sdR2 = (self.U.Sigma2(R_sigma+h, z, W3d_g) + self.U.Sigma2(R_sigma-h, z, W3d_g) - 2 * self.U.Sigma2(R_sigma, z, W3d_g))/(h**2)
+      dsdR = old_div((self.U.Sigma2(R_sigma+h, z, W3d_g) - self.U.Sigma2(R_sigma-h, z, W3d_g)),(2 * h))
+      d2sdR2 = old_div((self.U.Sigma2(R_sigma+h, z, W3d_g) + self.U.Sigma2(R_sigma-h, z, W3d_g) - 2 * self.U.Sigma2(R_sigma, z, W3d_g)),(h**2))
 
       self.neff = - R_sigma * dsdR - 3.
       self.C = - R_sigma * dsdR + R_sigma**2 * dsdR**2 - R_sigma**2 * d2sdR2
@@ -77,16 +82,16 @@ class Halofit(object):
       """A has to be a ParamsHalofit object
       """
       ##print '********** k, z = ', k, z
-      Delta2Linz = k**3 * self.U.fPlin_z(k, z)/(2 * np.pi**2)
+      Delta2Linz = old_div(k**3 * self.U.fPlin_z(k, z),(2 * np.pi**2))
       
-      y = k / A.k_sigma
+      y = old_div(k, A.k_sigma)
       fy = y / 4. + y**2 / 8.
-      Delta2Q = Delta2Linz * ( (1 + Delta2Linz)**A.betan / (1 + A.alphan * Delta2Linz) ) * np.exp(-fy)      # 2-halo term
-      Delta2Hprime = A.an * y**(3 * A.f1) / (1 + A.bn * y**(A.f2) + (A.cn * A.f3 * y)**(3. - A.gamman))
-      Delta2H = Delta2Hprime / (1. + A.mun / y + A.nun / y**2)    # 1-halo term
+      Delta2Q = Delta2Linz * ( old_div((1 + Delta2Linz)**A.betan, (1 + A.alphan * Delta2Linz)) ) * np.exp(-fy)      # 2-halo term
+      Delta2Hprime = old_div(A.an * y**(3 * A.f1), (1 + A.bn * y**(A.f2) + (A.cn * A.f3 * y)**(3. - A.gamman)))
+      Delta2H = old_div(Delta2Hprime, (1. + old_div(A.mun, y) + old_div(A.nun, y**2)))    # 1-halo term
       Delta2NL = Delta2Q + Delta2H
       
-      return (2 * np.pi**2) / k**3 * Delta2NL
+      return old_div((2 * np.pi**2), k**3) * Delta2NL
 
 
    def SaveAll(self):
@@ -121,7 +126,7 @@ class Halofit(object):
          z = self.zvec[iZ]
          ax.loglog(self.kvec, self.Pmat[:,iZ], 'b-', label=r'$z=$'+str(z))
          #
-         Plin = np.array(map(lambda k: self.U.fPlin_z(k, z), self.kvec))
+         Plin = np.array([self.U.fPlin_z(k, z) for k in self.kvec])
          ax.loglog(self.kvec, Plin, 'k--')
       #
       ax.legend(loc=1)

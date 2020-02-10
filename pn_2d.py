@@ -1,3 +1,9 @@
+from __future__ import division
+from builtins import str
+from builtins import map
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from headers import *
 
 ##################################################################################
@@ -42,9 +48,9 @@ class P2dAuto(object):
       #print "precomputing p2d "+self.name
       data = np.zeros((len(self.L), 4))
       data[:,0] = self.L.copy()
-      data[:,1] = np.array(map(self.fP_1h, self.L))
-      data[:,2] = np.array(map(self.fP_2h, self.L))
-      data[:,3] = np.array(map(self.fPnoise, self.L))
+      data[:,1] = np.array(list(map(self.fP_1h, self.L)))
+      data[:,2] = np.array(list(map(self.fP_2h, self.L)))
+      data[:,3] = np.array(list(map(self.fPnoise, self.L)))
       np.savetxt("./output/pn_2d/p2d_"+self.name+".txt", data)
 
    def LoadP(self):
@@ -70,11 +76,11 @@ class P2dAuto(object):
       #print "precomputing t2d "+self.name
       data = np.zeros((len(self.L), 6))
       data[:,0] = self.L.copy()
-      data[:,1] = np.array(map(self.fT_1h, self.L))
-      data[:,2] = np.array(map(self.fTnoise, self.L))
-      data[:,3] = np.array(map(self.fT_2h, self.L))
-      data[:,4] = np.array(map(self.fT_4h, self.L))
-      data[:,5] = np.array(map(self.fT_ssv, self.L))
+      data[:,1] = np.array(list(map(self.fT_1h, self.L)))
+      data[:,2] = np.array(list(map(self.fTnoise, self.L)))
+      data[:,3] = np.array(list(map(self.fT_2h, self.L)))
+      data[:,4] = np.array(list(map(self.fT_4h, self.L)))
+      data[:,5] = np.array(list(map(self.fT_ssv, self.L)))
       np.savetxt("./output/pn_2d/t2d_"+self.name+".txt", data)
    
    def LoadT(self):
@@ -111,10 +117,10 @@ class P2dAuto(object):
       z = 1./a-1.
       chi = self.U.ComovDist(a, self.U.a_obs)
       #
-      result = 3.e5/( self.U.Hubble(a) * a**2 )
+      result = old_div(3.e5,( self.U.Hubble(a) * a**2 ))
       result *= self.Weight.f(a)**2
       result /= chi**2
-      result *= fP(l/chi, z)
+      result *= fP(old_div(l,chi), z)
       return result
    
    def fP_1h(self, l):
@@ -167,10 +173,10 @@ class P2dAuto(object):
       z = 1./a-1.
       chi = self.U.ComovDist(a, self.U.a_obs)
       #
-      result = 3.e5/( self.U.Hubble(a) * a**2 )
+      result = old_div(3.e5,( self.U.Hubble(a) * a**2 ))
       result *= self.Weight.f(a)**4
       result /= chi**6
-      result *= fP(l/chi, z)
+      result *= fP(old_div(l,chi), z)
       return result
 
    def fT_1h(self, l):
@@ -202,7 +208,7 @@ class P2dAuto(object):
       T(l, -l+L, l, -l-L) = T(l,-l,l,-l) + T_ssv,
       where L << l.
       """
-      g = lambda k,z: self.Pn.fT_ssv(k, k, k*L/l, z)
+      g = lambda k,z: self.Pn.fT_ssv(k, k, old_div(k*L,l), z)
       f = lambda a: self.integrandT(a, g, l)
       result = integrate.quad(f, self.aMin, self.aMax, epsabs=0, epsrel=1.e-2)[0]
       #print "done ell=",l
@@ -217,10 +223,10 @@ class P2dAuto(object):
       z = 1./a-1.
       chi = self.U.ComovDist(a, self.U.a_obs)
       #
-      result = 3.e5/( self.U.Hubble(a) * a**2 )
+      result = old_div(3.e5,( self.U.Hubble(a) * a**2 ))
       result *= self.Weight.f(a)**4
       result /= chi**6
-      result *= fP(l1/chi, l2/chi, z)
+      result *= fP(old_div(l1,chi), old_div(l2,chi), z)
       return result
 
    def fTnondiag(self, l1, l2):
@@ -254,7 +260,7 @@ class P2dAuto(object):
       fig = plt.figure(1)
       ax = plt.subplot(111)
       #
-      factor = self.L*(self.L+1.)/(2.*np.pi)
+      factor = old_div(self.L*(self.L+1.),(2.*np.pi))
       ax.loglog(self.L, factor*(self.P1h+self.P2h+self.Pnoise), 'k', lw=4, label=r'$P_\text{total}$')
       ax.loglog(self.L, factor*self.P2h, 'b-', lw=2, label=r'$P_\text{2h}$')
       ax.loglog(self.L, factor*self.P1h, 'r-', lw=2, label=r'$P_\text{1h}$')
@@ -275,7 +281,7 @@ class P2dAuto(object):
       fig = plt.figure(0)
       ax = plt.subplot(111)
       #
-      factor = self.L*(self.L+1.)/(2.*np.pi)
+      factor = old_div(self.L*(self.L+1.),(2.*np.pi))
       ax.loglog(L, factor*self.dP1h, '--', label=r'1h')
       ax.loglog(L, factor*self.dP2h, '--', label=r'2h')
       ax.loglog(L, factor*(self.dP1h+self.dP2h), 'k', label=r'tot')
@@ -291,7 +297,7 @@ class P2dAuto(object):
       fig = plt.figure(1)
       ax = plt.subplot(111)
       #
-      ax.semilogx(self.L, self.dP / self.P, 'b-')
+      ax.semilogx(self.L, old_div(self.dP, self.P), 'b-')
       ax.grid()
       ax.set_xlabel(r'l')
       ax.set_ylabel(r'$\frac{dlnP}{d\delta}(\ell)$')
@@ -305,17 +311,17 @@ class P2dAuto(object):
       A = np.linspace(self.aMin, self.aMax, 201)
       Z = 1./A-1.
       #print Z
-      Chi = np.array(map(lambda a: self.U.ComovDist(a, 1.), A))
-      H = np.array(map(lambda a: self.U.Hubble(a), A))
-      W = np.array(map(self.Weight.f, A))
-      dChidA = 3.e5 / (H*A**2)
-      dChidZ = 3.e5 / H
+      Chi = np.array([self.U.ComovDist(a, 1.) for a in A])
+      H = np.array([self.U.Hubble(a) for a in A])
+      W = np.array(list(map(self.Weight.f, A)))
+      dChidA = old_div(3.e5, (H*A**2))
+      dChidZ = old_div(3.e5, H)
       
       # redshift contributions for P1h and P2h
       f = lambda a: self.integrandP(a, self.Pn.fP_1h, l)
-      dP1h_da = np.array(map(f, A))
+      dP1h_da = np.array(list(map(f, A)))
       f = lambda a: self.integrandP(a, self.Pn.fP_2h, l)
-      dP2h_da = np.array(map(f, A))
+      dP2h_da = np.array(list(map(f, A)))
       #
       dP1h_dz = dP1h_da * A**2
       dP2h_dz = dP2h_da * A**2
@@ -323,7 +329,7 @@ class P2dAuto(object):
       # redshift contributions for Pshot
       if hasattr(self.Weight, 'fdPshotNoise_da'):
          f = lambda a: self.Weight.fdPshotNoise_da(a, l)
-         dPshot_da = np.array(map(f, A))
+         dPshot_da = np.array(list(map(f, A)))
          dPshot_dz = dPshot_da * A**2
       
       '''
@@ -423,22 +429,22 @@ class P2dAuto(object):
       nZ = 51
       zMin = 1./self.aMax-1.
       zMax = 5.   #1./self.Weight.aMin-1.
-      dZ = (zMax-zMin)/nZ
+      dZ = old_div((zMax-zMin),nZ)
       Z = np.linspace(zMin, zMax, nZ)
       zEdges = np.linspace(zMin-0.5*dZ, zMax+0.5*dZ, nZ+1)
 
       A = 1./(1.+Z)
-      Chi = np.array(map(lambda a: self.U.ComovDist(a, 1.), A))
-      H = np.array(map(lambda a: self.U.Hubble(a), A))
-      W = np.array(map(self.Weight.f, A))
-      dChidA = 3.e5 / (H*A**2)
-      dChidZ = 3.e5 / H
+      Chi = np.array([self.U.ComovDist(a, 1.) for a in A])
+      H = np.array([self.U.Hubble(a) for a in A])
+      W = np.array(list(map(self.Weight.f, A)))
+      dChidA = old_div(3.e5, (H*A**2))
+      dChidZ = old_div(3.e5, H)
       
       # multipoles to evaluate
       nL = 51  #51
       lnlMin = np.log10(10.)
       lnlMax = np.log10(1.e4)
-      dlnl = (lnlMax-lnlMin)/nL
+      dlnl = old_div((lnlMax-lnlMin),nL)
       lnL = np.linspace(lnlMin, lnlMax, nL)
       lnlEdges = np.linspace(lnlMin-0.5*dlnl, lnlMax+0.5*dlnl, nL+1)
       L = 10.**lnL
@@ -482,7 +488,7 @@ class P2dAuto(object):
       for iL in range(nL):
          l = L[iL]
          f = lambda a: self.integrandP(a, self.Pn.fP, l)
-         dPdz[:,iL] = np.array(map(f, A))
+         dPdz[:,iL] = np.array(list(map(f, A)))
          dPdz[:,iL] *= A**2
 #         # normalize so int dz dP/dz = 1 for all ell
 #         dPdz[:,iL] /= np.trapz(Z, dPdz[:,iL])
@@ -512,7 +518,7 @@ class P2dAuto(object):
       
       # load Planck data points (Planck 13 XXX)
       nu = self.Weight.nu
-      name = str(int(nu/1.e9))
+      name = str(int(old_div(nu,1.e9)))
       p13 = Planck13CIBData()
       L = p13.PlanckPCIB['ell']
       P = p13.PlanckPCIB[name]
@@ -524,15 +530,15 @@ class P2dAuto(object):
       # beam in arcmin
       def fdetectorNoise(l, sensitivity, beam):
          beam *= np.pi/180./60.  # convert arcmin to rad
-         sigma_beam = beam / np.sqrt(8.*np.log(2.))   # convert fwhm to sigma
+         sigma_beam = old_div(beam, np.sqrt(8.*np.log(2.)))   # convert fwhm to sigma
          return sensitivity**2 * np.exp(l**2 * sigma_beam**2)
       
       # compare to some noise levels
       # !!!!! these are only relevant for \sim 545GHz, for Planck and CCAT
       f = lambda l: fdetectorNoise(l, sensitivity=13.5, beam=4.8)
-      noisePlanck = np.array(map(f, self.L))
+      noisePlanck = np.array(list(map(f, self.L)))
       f = lambda l: fdetectorNoise(l, sensitivity=1.2, beam=0.5)
-      noiseCCAT = np.array(map(f, self.L))
+      noiseCCAT = np.array(list(map(f, self.L)))
       
       
       # P
@@ -594,7 +600,7 @@ class P2dAuto(object):
       ax.plot(self.L, factor*self.Tnoise, 'fuchsia', lw=1, label=r'$T^\text{shot}$')
       #
       if func is not None:
-         F = np.array(map(func, self.L))
+         F = np.array(list(map(func, self.L)))
          ax.plot(self.L, factor*F**2, 'b', lw=2)
       #
       ax.legend(loc=1, fontsize='x-small', labelspacing=0.1)
@@ -614,23 +620,23 @@ class P2dAuto(object):
    def plotIntegrandT(self, l=5.e2):
       A = np.linspace(self.aMin, self.aMax, 101)
       Z = 1./A-1.
-      Chi = np.array(map(lambda a: self.U.ComovDist(a, 1.), A))
-      H = np.array(map(lambda a: self.U.Hubble(a), A))
-      W = np.array(map(self.Weight.f, A))
-      dChidA = 3.e5 / (H*A**2)
-      dChidZ = 3.e5 / H
+      Chi = np.array([self.U.ComovDist(a, 1.) for a in A])
+      H = np.array([self.U.Hubble(a) for a in A])
+      W = np.array(list(map(self.Weight.f, A)))
+      dChidA = old_div(3.e5, (H*A**2))
+      dChidZ = old_div(3.e5, H)
       
       def f(a):
          z = 1./a-1.
          chi = self.U.ComovDist(a, 1.)
-         return self.Pn.fT1hinterp(l/chi, z)
-      T3d_1h = np.array(map(f, A))
+         return self.Pn.fT1hinterp(old_div(l,chi), z)
+      T3d_1h = np.array(list(map(f, A)))
       
       #      #print T3d_1h
       
       # integrand
       f = lambda a: self.integrand(a, self.Pn.fT1hinterp, l)
-      dT1h_da = np.array(map(f, A))
+      dT1h_da = np.array(list(map(f, A)))
       
       dT1h_dz = dT1h_da * A**2
       
@@ -639,9 +645,9 @@ class P2dAuto(object):
       fig=plt.figure(0)
       ax=fig.add_subplot(111)
       #
-      ax.plot(A, A* dChidA * W**4/Chi**6 / np.max(A* dChidA * W**4/Chi**6), 'k', lw=2, label=r'kernel')
-      ax.plot(A, T3d_1h / np.max(T3d_1h), 'b--', lw=2, label=r'$T_\text{1h}^\text{3d}$')
-      ax.plot(A, A*dT1h_da/np.max(A*dT1h_da), 'b', lw=2, label=r'integrand for T1h')
+      ax.plot(A, old_div(old_div(A* dChidA * W**4,Chi**6), np.max(old_div(A* dChidA * W**4,Chi**6))), 'k', lw=2, label=r'kernel')
+      ax.plot(A, old_div(T3d_1h, np.max(T3d_1h)), 'b--', lw=2, label=r'$T_\text{1h}^\text{3d}$')
+      ax.plot(A, old_div(A*dT1h_da,np.max(A*dT1h_da)), 'b', lw=2, label=r'integrand for T1h')
       #
       ax.legend(loc=2)
       ax.set_xscale('log', nonposx='clip')
@@ -655,9 +661,9 @@ class P2dAuto(object):
       fig=plt.figure(1)
       ax=fig.add_subplot(111)
       #
-      ax.plot(Z, dChidZ * W**4/Chi**6 / np.max(dChidZ * W**4/Chi**6), 'k', lw=2, label=r'kernel')
-      ax.plot(Z, T3d_1h / np.max(T3d_1h), 'b--', lw=2, label=r'$T_\text{1h}^\text{3d}$')
-      ax.plot(Z, dT1h_dz/np.max(dT1h_dz), 'b', lw=2, label=r'integrand for T1h')
+      ax.plot(Z, old_div(old_div(dChidZ * W**4,Chi**6), np.max(old_div(dChidZ * W**4,Chi**6))), 'k', lw=2, label=r'kernel')
+      ax.plot(Z, old_div(T3d_1h, np.max(T3d_1h)), 'b--', lw=2, label=r'$T_\text{1h}^\text{3d}$')
+      ax.plot(Z, old_div(dT1h_dz,np.max(dT1h_dz)), 'b', lw=2, label=r'integrand for T1h')
       #
       ax.legend(loc=2)
       #ax.set_xscale('log', nonposx='clip')
@@ -722,20 +728,20 @@ class P2dCross(P2dAuto):
       z = 1./a-1.
       chi = self.U.ComovDist(a, self.U.a_obs)
       #
-      result = 3.e5/( self.U.Hubble(a) * a**2 )
+      result = old_div(3.e5,( self.U.Hubble(a) * a**2 ))
       result *= self.Weight1.f(a) * self.Weight2.f(a)
       result /= chi**2
-      result *= fP(l/chi, z)
+      result *= fP(old_div(l,chi), z)
       return result
 
    def integrandT(self, a, fP, l):
       z = 1./a-1.
       chi = self.U.ComovDist(a, self.U.a_obs)
       #
-      result = 3.e5/( self.U.Hubble(a) * a**2 )
+      result = old_div(3.e5,( self.U.Hubble(a) * a**2 ))
       result *= self.Weight1.f(a)**2 * self.Weight2.f(a)**2
       result /= chi**6
-      result *= fP(l/chi, z)
+      result *= fP(old_div(l,chi), z)
       return result
 
 
