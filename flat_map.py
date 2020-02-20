@@ -165,7 +165,7 @@ class FlatMap(object):
       vmin = np.min(data.flatten())
       vmax = np.max(data.flatten())
 
-      fig=plt.figure(0)
+      fig=plt.figure(0,figsize=(8,8))
       ax=fig.add_subplot(111)
       #
       # pcolor wants x and y to be edges of cell,
@@ -424,7 +424,7 @@ class FlatMap(object):
    ###############################################################################
    # Measure power spectrum
 
-   def crossPowerSpectrum(self, dataFourier1, dataFourier2, theory=[], fsCl=None, nBins=51, lRange=None, plot=False, name="test", save=False):
+   def crossPowerSpectrum(self, dataFourier1, dataFourier2, theory=[], fsCl=None, nBins=51, lRange=None, plot=False, name="test", save=False, dataLabel=None, theoryLabel=None):
 
       # define ell bins
       ell = self.l.flatten()
@@ -441,49 +441,76 @@ class FlatMap(object):
       # number of modes
       Nmodes, lEdges, binIndices = stats.binned_statistic(ell, np.zeros_like(ell), statistic='count', bins=lEdges)
       Nmodes = np.nan_to_num(Nmodes)
-      # power spectrum
-      power = (dataFourier1 * np.conj(dataFourier2)).flatten()
-      power = np.real(power)  # unnecessary in principle, but avoids binned_statistics to complain
-      Cl, lEdges, binIndices = stats.binned_statistic(ell, power, statistic='mean', bins=lEdges)
-      Cl = np.nan_to_num(Cl)
-      # finite volume correction
-      Cl /= self.sizeX*self.sizeY
-      # 1sigma uncertainty on Cl
-      if fsCl is None:
-         sCl = Cl*np.sqrt(2)
+
+      if np.array_equal(dataFourier1, dataFourier2):
+         # power spectrum
+         power = (dataFourier1 * np.conj(dataFourier2)).flatten()
+         power = np.real(power)  # unnecessary in principle, but avoids binned_statistics to complain
+         Cl, lEdges, binIndices = stats.binned_statistic(ell, power, statistic='mean', bins=lEdges)
+         Cl = np.nan_to_num(Cl)
+         # finite volume correction
+         Cl /= self.sizeX*self.sizeY
+         # 1sigma uncertainty on Cl
+         if fsCl is None:
+            sCl = Cl*np.sqrt(2)
+         else:
+            sCl = np.array(list(map(fsCl, lCen)))
       else:
-         sCl = np.array(list(map(fsCl, lCen)))
+         power1 = (dataFourier1 * np.conj(dataFourier1)).flatten()
+         power1 = np.real(power1) 
+         Cl1, lEdges1, binIndices1 = stats.binned_statistic(ell, power1, statistic='mean', bins=lEdges)
+         Cl1 = np.nan_to_num(Cl1)
+         Cl1 /= self.sizeX*self.sizeY
+
+         power2 = (dataFourier2 * np.conj(dataFourier2)).flatten()
+         power2 = np.real(power2) 
+         Cl2, lEdges2, binIndices2 = stats.binned_statistic(ell, power2, statistic='mean', bins=lEdges)
+         Cl2 = np.nan_to_num(Cl2)
+         Cl2 /= self.sizeX*self.sizeY
+
+         power3 = (dataFourier1 * np.conj(dataFourier2)).flatten()
+         power3 = np.real(power3) 
+         Cl, lEdges, binIndices = stats.binned_statistic(ell, power3, statistic='mean', bins=lEdges)
+         Cl = np.nan_to_num(Cl) 
+         Cl /= self.sizeX*self.sizeY
+         
+         if fsCl is None:
+            sCl = np.sqrt(Cl**2. + Cl1 * Cl2)
+         else:
+            sCl = np.array(list(map(fsCl, lCen)))
+         
+
       # In case of a cross-correlation, Cl may be negative.
       # the absolute value is then still some estimate of the error bar
       sCl = np.abs(sCl)
-      sCl /= np.sqrt(Nmodes)
+      sCl = divideArr(sCl,np.sqrt(Nmodes))
       sCl[np.where(np.isfinite(sCl)==False)] = 0.
       
       
       if plot:
          factor = 1. # lCen**2
          
-         fig=plt.figure(0)
+         fig=plt.figure(0,figsize=(6,6))
          ax=fig.add_subplot(111)
          #
          Ipos = np.where(Cl>=0.)
          Ineg = np.where(Cl<0.)
-         ax.errorbar(lCen[Ipos], factor*Cl[Ipos], yerr=factor*sCl[Ipos], c='b', fmt='.')
+         ax.errorbar(lCen[Ipos], factor*Cl[Ipos], yerr=factor*sCl[Ipos], c='b', fmt='.',label=dataLabel)
          ax.errorbar(lCen[Ineg], -factor*Cl[Ineg], yerr=factor*sCl[Ineg], c='r', fmt='.')
          #
          for f in theory:
             L = np.logspace(np.log10(1.), np.log10(np.max(ell)), 201, 10.)
             ClExpected = np.array(list(map(f, L)))
-            ax.plot(L, factor*ClExpected, 'k')
+            ax.plot(L, factor*ClExpected, 'k', label=theoryLabel)
          #
          #ax.axhline(0.)
          ax.set_xscale('log', nonposx='clip')
          ax.set_yscale('log', nonposy='clip')
-         #ax.set_xlim(1.e1, 4.e4)
+         ax.set_xlim(1.e1, 4.e4)
          #ax.set_ylim(1.e-5, 2.e5)
          ax.set_xlabel(r'$\ell$')
+         ax.legend(loc=0)
          #ax.set_ylabel(r'$\ell^2 C_\ell$')
-         ax.set_ylabel(r'$C_\ell$')
          #
          if save==True:
             if name is None:
@@ -498,10 +525,85 @@ class FlatMap(object):
 
 
 
-   def powerSpectrum(self, dataFourier=None, theory=[], fsCl=None, nBins=51, lRange=None, plot=False, name="test", save=False):
+   def powerSpectrum(self, dataFourier=None, theory=[], fsCl=None, nBins=51, lRange=None, plot=False, name="test", save=False, dataLabel=None, theoryLabel=None):
       if dataFourier is None:
          dataFourier = self.dataFourier.copy()
-      return self.crossPowerSpectrum(dataFourier1=dataFourier, dataFourier2=dataFourier, theory=theory, fsCl=fsCl, nBins=nBins, lRange=lRange, plot=plot, name=name, save=save)
+      return self.crossPowerSpectrum(dataFourier1=dataFourier, dataFourier2=dataFourier, theory=theory, fsCl=fsCl, nBins=nBins, lRange=lRange, plot=plot, name=name, save=save, dataLabel=dataLabel, theoryLabel=theoryLabel)
+
+
+
+   def crossPowerSpectrumFiltered(self, dataFourier1, dataFourier2, norm1, norm2, theory=[], fsCl=None, nBins=51, lRange=None, plot=False, name="test", save=False, dataLabel=None, theoryLabel=None):
+      def f1(l):
+         result = divide(1., norm1(l))
+         if not np.isfinite(result):
+            result = 0.
+         return result
+
+      def f2(l):
+         result = divide(1., norm2(l))
+         if not np.isfinite(result):
+            result = 0.
+         return result  
+
+      dataFourier1_filtered = self.filterFourierIsotropic(f1, dataFourier=dataFourier1, test=False)
+      dataFourier2_filtered = self.filterFourierIsotropic(f2, dataFourier=dataFourier2, test=False)
+      return self.crossPowerSpectrum(dataFourier1=dataFourier1_filtered, dataFourier2=dataFourier2_filtered, theory=theory, fsCl=fsCl, nBins=nBins, lRange=lRange, plot=plot, name=name, save=save, dataLabel=dataLabel, theoryLabel=theoryLabel)
+
+
+
+   def crossPowerSpectrumComp(self, dataFourier1, dataFourier2, dataFourier3, theory=[], fsCl=None, nBins=51, lRange=None, plot=False, name="test", save=False, label1=None, label2=None):
+      lCen, Cl, sCl = self.crossPowerSpectrum(dataFourier1=dataFourier1, dataFourier2=dataFourier3, theory=theory, fsCl=fsCl, nBins=nBins, lRange=lRange)
+      lCen1, Cl1, sCl1 = self.crossPowerSpectrum(dataFourier1=dataFourier2, dataFourier2=dataFourier3, theory=theory, fsCl=fsCl, nBins=nBins, lRange=lRange)
+
+      ell = self.l.flatten()
+
+      if plot:
+         factor = 1. # lCen**2
+         
+         fig=plt.figure(0,figsize=(11,8))
+         ax=fig.add_subplot(211)
+         ax2=fig.add_subplot(212)
+         #
+         Ipos = np.where(Cl>=0.)
+         Ineg = np.where(Cl<0.)
+         ax.errorbar(lCen[Ipos], factor*Cl[Ipos], yerr=factor*sCl[Ipos], c='b', fmt='.',label=label1)
+         ax.errorbar(lCen[Ineg], -factor*Cl[Ineg], yerr=factor*sCl[Ineg], c='b', fmt='.')
+         #
+         Ipos1 = np.where(Cl1>=0.)
+         Ineg1 = np.where(Cl1<0.)
+         ax.errorbar(lCen1[Ipos1], factor*Cl1[Ipos1], yerr=factor*sCl1[Ipos1], c='r', fmt='.',label=label2)
+         ax.errorbar(lCen1[Ineg1], -factor*Cl1[Ineg1], yerr=factor*sCl1[Ineg1], c='r', fmt='.')
+         #
+         for f in theory:
+            L = np.logspace(np.log10(1.), np.log10(np.max(ell)), 201, 10.)
+            ClExpected = np.array(list(map(f, L)))
+            ax.plot(L, factor*ClExpected, 'k')
+         #
+         #ax.axhline(0.)
+         ax.set_xscale('log', nonposx='clip')
+         ax.set_yscale('log', nonposy='clip')
+         ax2.set_xscale('log', nonposx='clip')
+         ax2.set_yscale('log', nonposy='clip')
+         #ax.set_xlim(1.e1, 4.e4)
+         #ax.set_ylim(1.e-5, 2.e5)
+         ax2.set_xlabel(r'$\ell$')
+         #ax.set_ylabel(r'$\ell^2 C_\ell$')
+         #
+         ax.legend(loc=0)
+	 
+	 ax2.plot(lCen, Cl/Cl1,c='k',marker='.',label=label1+"/"+label2)
+	 print(Cl/Cl1)
+         ax2.legend(loc=0)
+
+         if save==True:
+            if name is None:
+               name = self.name
+            print("saving plot to figures")
+            fig.savefig("figures/test__power.png")
+            fig.clf()
+         else:
+            plt.show()
+
 
 
    def binTheoryPowerSpectrum(self, fCl, nBins=17, lRange=None):
@@ -781,7 +883,7 @@ class FlatMap(object):
    ###############################################################################
    # Generate Poisson white noise map
 
-   def genPoissonWhiteNoise(self, nbar, norm=False, test=False):
+   def genPoissonWhiteNoise(self, nbar, fradioPoisson, norm=False, test=False):
       """Generate Poisson white noise.
       Returns real space map.
       nbar mean number density of objects, in 1/sr.
@@ -797,6 +899,24 @@ class FlatMap(object):
       if norm:
          data = data / Ngal - 1.
       data = data.reshape(np.shape(self.x))
+      dataFourier = self.fourier(data)
+
+      #area of single pixel
+      singleA = (self.fSky * 4.*np.pi) / (self.nX*self.nY)
+      #power spectrum of poisson field
+      const = Ngal * singleA
+      #set power spectrum to 1
+      dataFourier /= np.sqrt(const)
+
+      # multiply by desired power spectrum
+      f = lambda l: np.sqrt(fradioPoisson(l))
+      flFourier = np.array(list(map(f, self.l.flatten())))
+      flFourier = np.nan_to_num(flFourier)
+      flFourier = flFourier.reshape(np.shape(self.l))
+      dataFourier *= flFourier
+      
+      data = self.inverseFourier(dataFourier)
+
       return data
 
 
@@ -4450,7 +4570,7 @@ class FlatMap(object):
 
 
 
-   def forecastN0KappaPSH(self, fC0, fCtot, lMin=1., lMax=1.e5, test=False, cache=None):
+   def forecastN0KappaBH(self, fC0, fCtot, lMin=1., lMax=1.e5, test=False, cache=None):
       print("computing the response")
       # Standard reconstruction noise
       r = self.computeResponseFFT(fC0, fCtot, lMin, lMax, test, cache)
